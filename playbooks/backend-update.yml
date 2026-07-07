@@ -1,0 +1,38 @@
+- hosts: all
+  become: true
+  vars:
+    docker_compose_build: "policy"
+  tasks:
+    - name: Create code container
+      ansible.builtin.file:
+        path: /opt/paneval
+        state: directory
+        mode: '0755'
+        owner: wang
+        group: wang
+
+    - name: Push backend code to remote server
+      ansible.posix.synchronize:
+        src: "{{ backend_code_dir }}/"
+        dest: /opt/paneval/backend
+
+    - name: Erase .git
+      ansible.builtin.file:
+        path: /opt/paneval/backend/.git
+        state: absent
+
+    - name: Poetry install
+      community.docker.docker_compose_v2_run:
+        project_src: /opt/paneval/backend
+        service: web
+        chdir: /paneval
+        command: /bin/bash -c "poetry install --only main --no-root"
+        files:
+          - docker-compose.prod.yml
+    - name: Restart service
+      community.docker.docker_compose_v2:
+        project_src: /opt/paneval/backend
+        state: restarted
+        build: "{{ docker_compose_build }}"
+        files:
+          - docker-compose.prod.yml

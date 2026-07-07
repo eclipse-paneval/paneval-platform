@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-*
+coverage
+docs/
+.pnpm-store/
+.cache/
+.temp/
+AGENTS.md
+*.local
+*.tsbuildinfo
+.DS_Store

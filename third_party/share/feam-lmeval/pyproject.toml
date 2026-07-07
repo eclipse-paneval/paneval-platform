@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "feam-lmeval"
+version = "0.1.0"
+description = ""
+authors = ["wanghui <wh_linux@126.com>"]
+readme = "README.md"
+packages = [{include = "feam_lmeval"}]
+
+
+[tool.poetry.dependencies]
+python = "^3.9"
+feam = { path = "../feam" }
+datasets = "^2.15.0"
+mysql-connector-python = "^8.2.0"
+cached-property = "^1.5.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple"
+
+[tool.poetry.plugins]
+[tool.poetry.plugins."feam.scenario.nlp"]
+"builtin.lmeval.qa.en" = "feam_lmeval.qa:EnglishQAScenario"

@@ -1,0 +1,68 @@
+services:
+  web:
+    image: paneval/web
+    build: ./
+    env_file:
+      - .env
+    ports:
+      - "${PANEVAL_WEB_PORT:-18080}:80"
+    volumes:
+      - webdata:/data
+      - ${PANEVAL_EXECUTOR_DATA_DIR:-./executor-data}:/share/project
+      - ./:/paneval
+      - ${PANEVAL_WEB_BUILD_OUT_DIR:-./dist-pro}:/var/www/html/paneval
+      - ${PANEVAL_DOCS_BUILD_OUT_DIR:-./docs}:/var/www/html/docs
+    networks:
+      - paneval
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+  executor:
+    image: ssh-online-executor
+    build: ./deployments/docker/ssh-online-executor
+    env_file:
+      - .env
+    volumes:
+      - ${PANEVAL_EXECUTOR_DATA_DIR:-./executor-data}:/share/project
+    networks:
+      - paneval
+    restart: always
+  db:
+    image: mysql:8
+    env_file:
+      - .docker-compose.env
+    volumes:
+      - dbdata:/var/lib/mysql:rw
+    command: --mysql-native-password=ON
+    restart: always
+    networks:
+      - paneval
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  redis:
+    image: redis:5
+    volumes:
+      - redisdata:/data
+    networks:
+      - paneval
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+networks:
+  paneval: {}
+
+volumes:
+  webdata: {}
+  dbdata: {}
+  redisdata: {}

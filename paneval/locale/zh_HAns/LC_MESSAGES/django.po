@@ -1,0 +1,405 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-09 10:29+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: paneval/apps/cem/models.py:17
+msgid "MODIFIED"
+msgstr "已修改"
+
+#: paneval/apps/cem/models.py:18 paneval/apps/user/models.py:16
+msgid "Pending"
+msgstr "排队中"
+
+#: paneval/apps/cem/models.py:19
+msgid "Platform Preparing"
+msgstr "排队中"
+
+#: paneval/apps/cem/models.py:20
+#, fuzzy
+#| msgid "Pending"
+msgid "Platform Pending"
+msgstr "排队中"
+
+#: paneval/apps/cem/models.py:21
+msgid "Platform Starting"
+msgstr "排队中"
+
+#: paneval/apps/cem/models.py:22
+msgid "Platform Scheduling"
+msgstr "排队中"
+
+#: paneval/apps/cem/models.py:23
+msgid "Running"
+msgstr "运行中"
+
+#: paneval/apps/cem/models.py:24
+msgid "Done Inference"
+msgstr "推理完成"
+
+#: paneval/apps/cem/models.py:25
+msgid "Human Evaluating"
+msgstr "人工评测中"
+
+#: paneval/apps/cem/models.py:26
+msgid "Success"
+msgstr "成功"
+
+#: paneval/apps/cem/models.py:27
+msgid "Failure"
+msgstr "失败"
+
+#: paneval/apps/cem/models.py:28
+msgid "Cancel"
+msgstr "取消"
+
+#: paneval/apps/cem/models.py:46
+msgid "System"
+msgstr "系统"
+
+#: paneval/apps/cem/models.py:47
+#, fuzzy
+#| msgid "Model Train"
+msgid "Model"
+msgstr "模型训练"
+
+#: paneval/apps/cem/views.py:57 paneval/apps/cem/views.py:364
+msgid "A job is still running"
+msgstr "仍有一个任务正在运行"
+
+#: paneval/apps/cem/views.py:69
+msgid "Started job number is exceed the quota of this month."
+msgstr "启动的任务数量超过本月限额"
+
+#: paneval/apps/cem/views.py:378
+msgid "Can't resume this job as the model had been changed"
+msgstr "模型文件已经改变，当前任务无法继续推理"
+
+#: paneval/apps/cem/views.py:384
+msgid "According to its status, We DONOT support to resume this run."
+msgstr "当前状态无法继续推理"
+
+#: paneval/apps/cem/views.py:389
+msgid "We DONOT support to resume this run."
+msgstr "当前任务不支持继续推理"
+
+#: paneval/apps/cem/views.py:457
+msgid "You may not change the datasets while the job is running."
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:18 paneval/apps/user/models.py:159
+msgid "API Evaluate"
+msgstr "接口评测"
+
+#: paneval/apps/evaluation/models.py:19 paneval/apps/user/models.py:160
+msgid "Model Evaluate"
+msgstr "模型评测"
+
+#: paneval/apps/evaluation/models.py:20 paneval/apps/user/models.py:161
+msgid "Model Train"
+msgstr "模型训练"
+
+#: paneval/apps/evaluation/models.py:24
+msgid "NLP"
+msgstr "NLP"
+
+#: paneval/apps/evaluation/models.py:25
+msgid "Multimodel"
+msgstr "多模态"
+
+#: paneval/apps/evaluation/models.py:29
+msgid "None"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:30
+msgid "Base"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:31
+msgid "SFT"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:32
+msgid "Backbone"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:33
+msgid "Fine-tuning"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:34
+msgid "direct-model"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:35
+#, fuzzy
+#| msgid "WeChat"
+msgid "Chat"
+msgstr "微信"
+
+#: paneval/apps/evaluation/models.py:38
+msgid "Builtin"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:39
+#, fuzzy
+#| msgid "Username"
+msgid "User"
+msgstr "用户名"
+
+#: paneval/apps/evaluation/models.py:176
+msgid "QA"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:177
+msgid "Classification"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:178
+msgid "Generation"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:179
+msgid "IR"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:180
+msgid "Generation QA"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:181
+msgid "Other"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:187
+msgid "English"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:188
+msgid "Chinese"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:189
+msgid "Multiple"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:272
+msgid "Dataset"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:273
+msgid "Reference Prefix"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:276
+msgid "Content"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:277
+msgid "Format"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:309
+msgid "commonsence"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:312
+msgid "truthfulness"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:315
+msgid "matching"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:318
+msgid "reasoning"
+msgstr ""
+
+#: paneval/apps/evaluation/models.py:321
+msgid "generation"
+msgstr ""
+
+#: paneval/apps/evaluation/serializers.py:86
+msgid "No such custom tokenizer"
+msgstr "没有找到自定义 Tokenizer"
+
+#: paneval/apps/evaluation/serializers.py:88
+msgid "Custom tokenizer has NO file been uploaded"
+msgstr "没有文件上传到自定义 Tokenizer"
+
+#: paneval/apps/evaluation/views.py:76
+msgid "Model name has been taken."
+msgstr "评测名称已存在"
+
+#: paneval/apps/evaluation/views.py:177 paneval/apps/evaluation/views.py:198
+msgid "No such dataset"
+msgstr "找不到数据集"
+
+#: paneval/apps/evaluation/views.py:339
+#, fuzzy
+#| msgid "Tokenizer's size is exceeded 10M."
+msgid "Tokenizer's size is exceeded 20M."
+msgstr "Tokenizer 大小不能抄过 10M"
+
+#: paneval/apps/evaluation/views.py:347
+msgid "Filename is required."
+msgstr "上传错误，没有文件名"
+
+#: paneval/apps/evaluation/views.py:410
+msgid "File DO NOT found on our server"
+msgstr "文件未找到"
+
+#: paneval/apps/user/models.py:15
+msgid "INCOMPLETE"
+msgstr "未补全"
+
+#: paneval/apps/user/models.py:17
+msgid "Approved"
+msgstr "审核通过"
+
+#: paneval/apps/user/models.py:18
+msgid "Denied"
+msgstr "拒绝"
+
+#: paneval/apps/user/models.py:114
+msgid "WeChat"
+msgstr "微信"
+
+#: paneval/apps/user/models.py:115
+msgid "Email"
+msgstr "邮箱"
+
+#: paneval/apps/user/models.py:116
+msgid "Username"
+msgstr "用户名"
+
+#: paneval/apps/user/models.py:117
+msgid "HuggingFace"
+msgstr ""
+
+#: paneval/validators.py:16
+msgid "Phone number is invalid."
+msgstr "无效的手机号码"
+
+#~ msgid "Please edit the evaluation to select proper resource"
+#~ msgstr "请先编辑评测选择恰当的资源"
+
+#~ msgid "The model has not ready yet."
+#~ msgstr "模型还没有完成上传"
+
+#~ msgid "CV"
+#~ msgstr "CV"
+
+#~ msgid "Audio"
+#~ msgstr "语音"
+
+#~ msgid "The content of the file can't load as its size is too large"
+#~ msgstr "文件太大，无法查看"
+
+#~ msgid "File had already been removed!"
+#~ msgstr "文件已经被删除"
+
+#~ msgid "No such model"
+#~ msgstr "无法找到该模型"
+
+#~ msgid "The total number of the uploading files must be less than 10000"
+#~ msgstr "上传文件总数不能超过10000"
+
+#~ msgid "Objective tasks could not submit"
+#~ msgstr "客观评价任务无法提交人工评测"
+
+#, fuzzy
+#~| msgid "You cannot submit a mark task this month."
+#~ msgid "You cannot submit more mark tasks this month."
+#~ msgstr "人工评测次数已经超限额"
+
+#, fuzzy
+#~ msgid "Already submitted"
+#~ msgstr "已经提交过人工评测，请勿重复提交"
+
+#, fuzzy
+#~| msgid "Multimodel"
+#~ msgid "Multi-Modal"
+#~ msgstr "多模态"
+
+#, fuzzy
+#~| msgid "Platform Preparing"
+#~ msgid "Preparing"
+#~ msgstr "排队中"
+
+#, fuzzy
+#~| msgid "The model has not ready yet."
+#~ msgid "This model can't be deleted!"
+#~ msgstr "模型还没有完成上传。"
+
+#~ msgid "To do so, the status of current model must be Updated."
+#~ msgstr "当前模型状态非「已更新」。"
+
+#~ msgid "To do so, the status of current model must be Reviewed."
+#~ msgstr "当前模型状态非「已审核」。"
+
+#~ msgid "Couldn't find the given batch."
+#~ msgstr "无法找到提交的任务。"
+
+#, fuzzy
+#~| msgid "Task had been submitted"
+#~ msgid "Current task has already been submitted."
+#~ msgstr "该任务已经提交排行榜"
+
+#~ msgid "Couldn't find the given result."
+#~ msgstr "无法找到提交的结果。"
+
+#~ msgid "batch result is empty."
+#~ msgstr "评测结果为空。"
+
+#, fuzzy
+#~| msgid "Tokenizer's size is exceeded 10M."
+#~ msgid "Image's size is exceeded 10M."
+#~ msgstr "Tokenizer 大小不能抄过 10M"
+
+#, fuzzy
+#~| msgid "API Evaluate"
+#~ msgid "AIEval"
+#~ msgstr "接口评测"
+
+#~ msgid "Task had been submitted"
+#~ msgstr "该任务已经提交排行榜"
+
+#, fuzzy
+#~| msgid "Email"
+#~ msgid "No email"
+#~ msgstr "邮箱"
+
+#~ msgid "Already signed in"
+#~ msgstr "用户已登录"
+
+#~ msgid "Phone number has been taken"
+#~ msgstr "手机号已经被注册"
+
+#~ msgid "Email has been taken"
+#~ msgstr "邮箱已经被注册"
+
+#, fuzzy
+#~| msgid "Phone number has been taken"
+#~ msgid "Username has been taken"
+#~ msgstr "手机号已经被注册"
+
+#~ msgid "Your email is already taken, please contact us."
+#~ msgstr "您的邮箱已经被占用"
+
+#~ msgid "Duplicated request: already completed"
+#~ msgstr "无法操作：已经完成补全"

@@ -1,0 +1,14 @@
+/data/log/app/*/*.log {
+    daily
+    missingok
+    rotate 180
+    dateext
+    compress
+    delaycompress
+    notifempty
+    create 640 nobody adm
+    sharedscripts
+    postrotate
+                /usr/bin/env supervisorctl -c /etc/supervisord.conf pid && kill -USR2 `/usr/bin/env supervisorctl -c /etc/supervisord.conf pid`
+    endscript
+}

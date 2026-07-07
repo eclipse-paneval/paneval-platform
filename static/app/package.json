@@ -1,0 +1,56 @@
+{
+  "name": "pan-eval-front",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=22.16.0",
+    "pnpm": ">=9.12.0"
+  },
+  "scripts": {
+    "i": "pnpm install",
+    "dev": "vite --mode base",
+    "ts:check": "vue-tsc --noEmit",
+    "build": "corepack pnpm run build:pro",
+    "build:pro": "corepack pnpm run ts:check && NODE_ENV=production vite build --mode pro",
+    "build:dev": "corepack pnpm run ts:check && NODE_ENV=production vite build --mode dev",
+    "serve:pro": "vite preview --mode pro",
+    "serve:dev": "vite preview --mode dev",
+    "preview": "corepack pnpm run serve:pro",
+    "typecheck": "vue-tsc --noEmit && tsc -p tsconfig.node.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "2.3.2",
+    "@tailwindcss/vite": "^4.0.8",
+    "@tanstack/vue-query": "^5.66.0",
+    "@vueuse/core": "^14.3.0",
+    "axios": "^1.7.9",
+    "element-plus": "^2.9.5",
+    "pinia": "^3.0.1",
+    "tailwindcss": "^4.0.8",
+    "vue": "^3.5.13",
+    "vue-i18n": "11.4.4",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/node": "^22.13.5",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.4.0",
+    "@vue/test-utils": "^2.4.6",
+    "eslint": "^9.21.0",
+    "eslint-plugin-vue": "^9.32.0",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.5.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.7",
+    "vue-tsc": "^2.2.4"
+  }
+}

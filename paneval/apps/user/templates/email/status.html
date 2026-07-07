@@ -1,0 +1,5 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<p>您在paneval平台提交的评测实例： ID： {{ id }}  模型名称：{{ model_name }}，参数规模：{{ llm_parameters }}, 评测版本：{{ version }}  {{ status_text }}，请您点击链接，查看详情信息。 <a href=" {{ website_url }}/#/eval/detail?id={{ id }}">{{ website_url }}/#/eval/detail?id={{ id }}</a> </p>
+{% endblock %}

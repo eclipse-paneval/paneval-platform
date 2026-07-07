@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+local_settings.py
+benchmark_output/
+.DS_Store
+.env
+celerybeat-schedule
+.docker-compose.env
+playbooks/hosts

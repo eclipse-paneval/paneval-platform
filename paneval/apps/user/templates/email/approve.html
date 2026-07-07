@@ -1,0 +1,12 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<p>您已经通过审核，现在可以登录 Paneval 官网（<a href="{{ website_url }}">paneval.eclipse.org</a>）创建评测任务。</p>
+<p>当前考虑到数据安全问题，在线评测暂时不可用。您可以使用离线评测，操作手册：<a href="{{ website_url }}/#/rule?m=2">{{ website_url }}/#/rule?m=2</a></p>
+<p>注意事项：</p>
+<ul>
+  <li>在您创建评测任务后，我们会按照大家创建任务的顺序分配算力资源，建议您先评测参数量小于等于 10B 的模型。</li>
+  <li>常见问题：<a href="{{ website_url }}/#/rule?m=3">{{ website_url }}/#/rule?m=3</a></li>
+  <li>若遇到问题无法解决，请邮件联系 <a href="mailto:paneval@eclipse.org">paneval@eclipse.org</a></li>
+</ul>
+{% endblock %}

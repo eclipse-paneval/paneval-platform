@@ -1,0 +1,11 @@
+---
+
+- hosts: all
+  become: true
+  vars:
+    front_dest_dir: /opt/paneval/docs
+    builder_container: docs-builder
+    builder_build_item: docs:build
+  tasks:
+    - name: Documents
+      include_tasks: tasks/frontend.yml

@@ -1,0 +1,11 @@
+---
+
+- hosts: all
+  become: true
+  vars:
+    front_dest_dir: /opt/paneval/front
+    builder_container: builder
+    builder_build_item: build:pro
+  tasks:
+    - name: Frontend
+      include_tasks: tasks/frontend.yml

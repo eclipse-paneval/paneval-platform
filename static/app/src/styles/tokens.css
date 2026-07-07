@@ -1,0 +1,26 @@
+:root {
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-page: #f9fafb;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eff0fc;
+  --color-surface-soft: #f5f8fc;
+  --color-text: #000662;
+  --color-text-strong: #292962;
+  --color-text-muted: #6e74a1;
+  --color-border: #dfe1f4;
+  --color-border-strong: #c3c6de;
+  --color-primary: #1762ee;
+  --color-primary-strong: #003ac2;
+  --color-primary-soft: #dfe1f4;
+  --color-danger: #f56c6c;
+  --gradient-primary: linear-gradient(315deg, #003ac2 0%, #1762ee 100%);
+  --shadow-soft: 0 12px 28px rgb(0 6 98 / 8%);
+  --shadow-card: 0 10px 24px rgb(74 83 223 / 10%);
+
+  --el-color-primary: var(--color-primary);
+  --el-fill-color-light: var(--color-surface-soft);
+  --el-font-family:
+    Inter, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial,
+    sans-serif;
+}

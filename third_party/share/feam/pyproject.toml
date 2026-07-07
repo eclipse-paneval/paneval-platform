@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "feam"
+version = "0.1.0"
+description = "Evaluation of AI Models"
+authors = ["wanghui <wh_linux@126.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [{include = "feam"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+dataclasses-json = "^0.5.7"
+cached-property = "^1.5.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple"
+
+[tool.poetry.plugins."feam.scenario.cv"]
+[tool.poetry.plugins."feam.scenario.voice"]
