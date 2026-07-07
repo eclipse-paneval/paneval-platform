@@ -1,0 +1,29 @@
+services:
+  web:
+    image: paneval/web
+    build: ./
+    env_file:
+      - .env
+    ports:
+      - "${PANEVAL_WEB_PORT:-8080}:80"
+    volumes:
+      - ${PANEVAL_WEB_DATA_DIR:-./webdata}:/data
+      - ${PANEVAL_EXECUTOR_DATA_DIR:-./executor-data}:/share/project
+      - ./:/paneval
+      - ${PANEVAL_WEB_BUILD_OUT_DIR:-./dist-pro}:/var/www/html/paneval
+      - ${PANEVAL_DOCS_BUILD_OUT_DIR:-./docs}:/var/www/html/docs
+    networks:
+      - paneval
+    restart: always
+  executor:
+    image: ssh-online-executor
+    build: ./deployments/docker/ssh-online-executor
+    env_file:
+      - .env
+    volumes:
+      - ${PANEVAL_EXECUTOR_DATA_DIR:-./executor-data}:/share/project
+    networks:
+      - paneval
+    restart: always
+networks:
+  paneval: {}

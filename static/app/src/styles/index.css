@@ -1,0 +1,49 @@
+@import './tokens.css';
+@import 'tailwindcss';
+
+html {
+  color: var(--color-text);
+  background: var(--color-page);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pan-primary-button {
+  color: #fff;
+  background: var(--gradient-primary);
+  box-shadow: 0 8px 18px rgb(23 98 238 / 18%);
+}
+
+.pan-primary-button:hover {
+  filter: brightness(1.04);
+}
+
+.pan-card {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}

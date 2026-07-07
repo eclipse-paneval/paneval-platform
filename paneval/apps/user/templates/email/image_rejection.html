@@ -1,0 +1,7 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<p>您在paneval平台提交的镜像： ID： {{ id }}  镜像名称：{{ name }}:{{ tag }}，外部镜像url：{{ url }} 已经【审核失败】。</p>
+<p></p>
+<p>请您重新导入镜像。</p>
+{% endblock %}

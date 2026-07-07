@@ -1,0 +1,51 @@
+:root {
+  --vp-c-brand-1: #276ef1;
+  --vp-c-brand-2: #4c7dff;
+  --vp-c-brand-3: #6f95ff;
+}
+
+.VPHomeHero .name {
+  max-width: 720px;
+}
+
+.paneval-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.paneval-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #1762ee 0%, #6f7cff 52%, #21d4fd 100%);
+  box-shadow: 0 12px 26px rgb(23 98 238 / 20%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.paneval-brand-name {
+  color: var(--vp-c-text-1);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.VPNavBarTitle .title:hover .paneval-brand-mark {
+  box-shadow: 0 14px 28px rgb(23 98 238 / 24%);
+}
+
+.vp-doc img:not(.no-zoom) {
+  cursor: zoom-in;
+}
+
+.medium-zoom-overlay,
+.medium-zoom-image {
+  z-index: 100;
+}

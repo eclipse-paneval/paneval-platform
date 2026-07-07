@@ -1,0 +1,4 @@
+/dist/
+__pycache__/
+.hypothesis/
+custom_dataset/

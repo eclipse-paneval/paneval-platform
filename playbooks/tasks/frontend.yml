@@ -1,0 +1,45 @@
+---
+
+- name: Create code container
+  ansible.builtin.file:
+    path: /opt/paneval
+    state: directory
+    mode: '0755'
+    owner: wang
+    group: wang
+
+- name: Push front code to remote server
+  ansible.posix.synchronize:
+    src: "{{ front_code_dir }}/"
+    dest: "{{ front_dest_dir }}"
+
+- name: Erase .git
+  ansible.builtin.file:
+    path: "{{ front_dest_dir }}/.git"
+    state: absent
+
+- name: Create a node.js container to build
+  community.docker.docker_container:
+    name: "{{ builder_container }}"
+    image: node:24
+    state: started
+    volumes:
+      - "{{ front_dest_dir }}:/front"
+    entrypoint: ["/bin/sh", "-c", "sleep infinity"]
+
+- name: Install pnpm
+  community.docker.docker_container_exec:
+    container: "{{ builder_container }}"
+    command: npm install -g pnpm
+
+- name: Install frontend dependencies in container
+  community.docker.docker_container_exec:
+    container: "{{ builder_container }}"
+    chdir: /front
+    command: pnpm install
+
+- name: Build frontend
+  community.docker.docker_container_exec:
+    container: "{{ builder_container }}"
+    chdir: /front
+    command: "npm run {{ builder_build_item }}"

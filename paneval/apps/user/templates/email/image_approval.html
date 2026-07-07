@@ -1,0 +1,5 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<p>您在paneval平台提交的镜像： ID： {{ id }}  镜像名称：{{ name }}:{{ tag }}，外部镜像url：{{ url }} 已经【导入成功】。</p>
+{% endblock %}

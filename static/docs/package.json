@@ -1,0 +1,15 @@
+{
+  "packageManager": "pnpm@9.12.0",
+  "devDependencies": {
+    "markdown-it-mathjax3": "^4.3.2",
+    "vitepress": "2.0.0-alpha.17"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "dependencies": {
+    "medium-zoom": "^1.1.0"
+  }
+}

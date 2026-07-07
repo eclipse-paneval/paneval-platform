@@ -1,0 +1,162 @@
+---
+
+- hosts: all
+  become: true
+  vars:
+    docker_compose_build: "policy"
+    paneval_executor_data_dir: "/mnt/paneval-data/executor"
+  tasks:
+    - name: Create code container
+      ansible.builtin.file:
+        path: /opt/paneval
+        state: directory
+        mode: '0755'
+        owner: wang
+        group: wang
+
+    - name: Push backend code to remote server
+      ansible.posix.synchronize:
+        src: "{{ backend_code_dir }}/"
+        dest: /opt/paneval/backend
+
+    - name: Erase .git
+      ansible.builtin.file:
+        path: /opt/paneval/backend/.git
+        state: absent
+
+    - name: Ensure /opt/paneval/keypair
+      ansible.builtin.file:
+        path: /opt/paneval/keypair
+        state: directory
+        mode: '0755'
+        owner: wang
+        group: wang
+
+    - name: Check if SSH keypair has been generated
+      ansible.builtin.stat:
+        path: /opt/paneval/keypair/id_ed25519
+      register: ssh_keypair
+
+    - name: Generate an ED25519 SSH keypair
+      community.crypto.openssh_keypair:
+        path: /opt/paneval/keypair/id_ed25519
+        type: ed25519
+        owner: root
+        group: root
+        mode: '0600'
+      when: ssh_keypair.stat.exists == False
+
+    - name: Read ED25519 SSH pub key
+      ansible.builtin.slurp:
+        src: /opt/paneval/keypair/id_ed25519.pub
+      register: ssh_pub_key
+
+    - name: Read ED25519 SSH priv key
+      ansible.builtin.slurp:
+        src: /opt/paneval/keypair/id_ed25519
+      register: ssh_priv_key
+
+    - name: Create .env
+      ansible.builtin.copy:
+        dest: /opt/paneval/backend/.env
+        content: |
+          PANEVAL_WEB_PORT=8080
+          PANEVAL_EXECUTOR_HTTP_USER=paneval
+          PANEVAL_EXECUTOR_HTTP_PASSWD='{{ paneval_executor_http_passwd }}'
+          PANEVAL_EXECUTOR_SSH_PUBLIC_KEY='{{ ssh_pub_key.content | b64decode }}'
+          PANEVAL_EXECUTOR_SSH_PRIVATE_KEY='{{ ssh_priv_key.content }}'
+          PANEVAL_EXECUTOR_DATA_DIR={{ paneval_executor_data_dir }}
+          PANEVAL_WEB_DATA_DIR=/data
+          PANEVAL_DEPLOYMENT_STAGE=production
+          PANEVAL_DOCS_BUILD_OUT_DIR=/opt/paneval/docs/docs/.vitepress/dist
+          PANEVAL_WEB_BUILD_OUT_DIR=/opt/paneval/front/dist-pro
+        mode: '0600'
+
+    - name: Create settings.py for production
+      ansible.builtin.copy:
+        dest: /opt/paneval/backend/deployments/production/settings.py
+        content: |
+          import sys
+
+          DEBUG = False
+
+          WEBSITE_URL = "https://paneval.eclipse.org"
+
+          STATIC_ROOT = "/var/www/html/paneval/static/"
+
+          ALLOWED_HOSTS = [
+              'paneval.eclipse.org'
+          ]
+
+          DATABASES = {
+              "default": {
+                  "ENGINE": "django.db.backends.mysql",
+                  "HOST": "{{ paneval_database_host }}",
+                  "NAME": "{{ paneval_database_dbname }}",
+                  "USER": "{{ paneval_database_user }}",
+                  "PASSWORD": "{{ paneval_database_password }}",
+                  "OPTIONS": {
+                      "ssl_mode": "REQUIRED",
+                      "charset": "utf8mb4",
+                  },
+              },
+          }
+
+          REDIS_BASE_URL = "rediss://{{ paneval_redis_host }}"
+
+          CACHES = {
+              "default": {
+                  "BACKEND": "django_redis.cache.RedisCache",
+                  "LOCATION": f"{REDIS_BASE_URL}/1",
+                  "OPTIONS": {
+                      "PASSWORD": "{{ paneval_redis_password }}",
+                      "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                      "CONNECTION_POOL_KWARGS": {
+                          "ssl_cert_reqs": False,
+                      },
+                  },
+              },
+          }
+
+          CELERY_BROKER_URL = 'rediss://:{{ paneval_redis_password }}@{{ paneval_redis_host }}?ssl_cert_reqs=none'
+          CELERY_RESULT_BACKEND = 'rediss://:{{ paneval_redis_password }}@{{ paneval_redis_host }}?ssl_cert_reqs=none'
+          CELERY_BROKER_TRANSPORT_OPTIONS = {"global_keyprefix": "{queue}:"}  # Redis cluster
+
+          LOGGING = {
+             'version': 1,
+             'disable_existing_loggers': False,
+             'formatters': {
+                 'verbose': {
+                     'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                 },
+             },
+             'handlers': {
+                 'console': {
+                     'level': 'INFO',
+                     'class': 'logging.StreamHandler',
+                     'stream': sys.stdout,
+                     'formatter': 'verbose'
+                 },
+                 "mail_admins": {
+                     "level": "ERROR",
+                     "class": "django.utils.log.AdminEmailHandler",
+                     "include_html": True,
+                 },
+             },
+             'loggers': {
+                 '': {
+                     'handlers': ['console'],
+                     'level': 'INFO',
+                     'propagate': True,
+                 },
+             },
+          }
+        mode: '0600'
+
+    - name: Start service
+      community.docker.docker_compose_v2:
+        project_src: /opt/paneval/backend
+        state: present
+        build: "{{ docker_compose_build }}"
+        files:
+          - docker-compose.prod.yml

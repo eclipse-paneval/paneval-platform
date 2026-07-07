@@ -1,0 +1,16 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<p>我们已经收到您在 Paneval 官网（<a href="{{ website_url }}">paneval.eclipse.org</a>）上的申请表单，非常遗憾您未能通过审核，可能有如下原因：</p>
+<ul>
+  <li>您使用的邮箱是个人邮箱，我们暂时不接受个人申请，如需要以组织身份申请，请修改为组织或企业邮箱
+    <ul>
+      <li><strong style="color: red;">点击链接修改邮箱：</strong><a href="https://passport.eclipse.org">https://passport.eclipse.org</a></li>
+      <li><strong style="color: red;">修改邮箱后需要退出 Paneval 官网、并重新登录后方可生效：</strong><a href="{{ website_url }}/">{{ website_url }}/</a></li>
+      <li><strong style="color: red;">邮箱每月仅支持修改一次。</strong></li>
+    </ul>
+  </li>
+  <li>您注册时填写的信息不全或有误，请登录官网补全或修改申请：<a href="{{ website_url }}/#/complement">{{ website_url }}/#/complement</a></li>
+  <li>您只申请了在线评测。平台目前考虑到数据安全问题，暂时只支持离线评测，我们已将您的账户重置为“待补全”状态，请您再次登录官网重新填写申请信息表单：<a href="{{ website_url }}/#/complement">{{ website_url }}/#/complement</a></li>
+</ul>
+{% endblock %}

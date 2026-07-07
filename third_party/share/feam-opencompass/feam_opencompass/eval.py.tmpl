@@ -1,0 +1,87 @@
+from mmengine.config import read_base
+
+from opencompass.models import HuggingFaceCausalLM
+from opencompass.partitioners import SizePartitioner
+from opencompass.runners import LocalRunner
+from opencompass.tasks import OpenICLInferTask
+
+with read_base():
+    # from opencompass.configs.datasets.humaneval.humaneval_gen_8e312c import \
+    from opencompass.configs.datasets.humaneval.humaneval_openai_sample_evals_gen_dcae0e import \
+        humaneval_datasets
+    # from opencompass.configs.datasets.mbpp.sanitized_mbpp_mdblock_0shot_nocot_gen_a2e416 import \
+    # from opencompass.configs.datasets.mbpp.sanitized_mbpp_gen_742f0c import \
+    from opencompass.configs.datasets.mbpp.sanitized_mbpp_mdblock_gen_a447ff import \
+        sanitized_mbpp_datasets
+print(environ)
+datasets = []
+if 'humaneval' in  environ['OPENCOMPASS_TASK']:
+    datasets += humaneval_datasets
+
+if 'mbpp' in  environ['OPENCOMPASS_TASK']:
+    datasets += sanitized_mbpp_datasets
+
+model_name = environ['EVALUATION_MODEL_NAME']
+model_path = environ['REMOTE_API']
+hugginface_prefix = 'hf://'
+
+gen_kwargs = {}
+if environ.get('EVALUATION_GEN_KWARGS'):
+    gen_kwargs = (dict(x.split('=') for x in environ['EVALUATION_GEN_KWARGS'].split(',')))
+
+max_seq_len = int(gen_kwargs.get('max_gen_toks') or 32000)
+batch_size = int(environ.get('EVALUATION_BATCH_SIZE') or 1)
+temperature = float(gen_kwargs.get('temperature') or 1.0)
+num_retry = int(environ.get('EVALUATION_NUM_RETRY') or 3)
+tokenizer = environ.get('EVALUATION_MODEL_TOKENIZER')
+
+if model_path.startswith(hugginface_prefix):
+    model_path = model_path[len(hugginface_prefix):]
+    models = [
+        dict(
+            type=HuggingFaceCausalLM,
+            abbr=model_name,
+            path=model_path,
+            tokenizer_path=tokenizer or  model_path,
+            tokenizer_kwargs=dict(
+                trust_remote_code=True,
+            ),
+            max_out_len=int(max_seq_len / 2),
+            max_seq_len=max_seq_len,
+            batch_size=batch_size,
+            model_kwargs=dict(trust_remote_code=True, device_map='auto'),
+            generation_kwargs=dict(
+                num_return_sequences=1,
+                do_sample=True,
+                top_p=float(gen_kwargs.get('top_p') or 0.9),
+                temperature=temperature,
+            ),
+            run_cfg=dict(num_gpus=1, num_procs=1),
+        ),
+    ]
+else:
+    from opencompass.models import OpenAI
+    models = [
+        dict(
+            type=OpenAI,                             # 使用 OpenAI 模型
+            # 以下为 `OpenAI` 初始化参数
+            path=model_name,                            # 指定模型类型
+            key='ENV',                   # OpenAI API Key
+            max_seq_len=max_seq_len,                        # 最大输入长度
+            retry=num_retry,
+            # 以下参数为各类模型都有的参数，非 `OpenAI` 的初始化参数
+            abbr=model_name,                            # 模型简称
+            run_cfg=dict(num_gpus=0),                # 资源需求（不需要 GPU）
+            max_out_len=int(max_seq_len / 2),                         # 最长生成长度
+            batch_size=batch_size,                            # 批次大小
+            temperature=temperature,
+            tokenizer_path=tokenizer,
+        ),
+    ]
+
+infer = dict(
+    partitioner=dict(type=SizePartitioner, max_task_size=300),
+    runner=dict(type=LocalRunner,
+                max_num_workers=16,
+                task=dict(type=OpenICLInferTask)),
+)
