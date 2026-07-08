@@ -53,6 +53,12 @@ describe('routes', () => {
     expect(indexRoute?.redirect).toBe('/console/evaluations')
   })
 
+  it('redirects the retired mine page to home', () => {
+    const mineRoute = routes.find((route) => route.path === '/mine')
+
+    expect(mineRoute?.redirect).toBe('/')
+  })
+
   it('defines document title keys for visible application routes', () => {
     const titledPaths = flattenPaths().filter((path) => path !== '/console')
     const titleByPath = new Map(

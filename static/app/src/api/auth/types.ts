@@ -19,3 +19,7 @@ export type LoginPayload = {
   username: string
   password: string
 }
+
+export type OidcStatus = {
+  enabled: boolean
+}

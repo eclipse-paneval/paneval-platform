@@ -12,17 +12,12 @@ export const routes: RouteRecordRaw[] = [
         meta: {
           titleKey: 'router.home'
         }
-      },
-      {
-        path: 'mine',
-        name: 'mine',
-        component: () => import('@/pages/account/MinePage.vue'),
-        meta: {
-          requiresAuth: true,
-          titleKey: 'router.mine'
-        }
       }
     ]
+  },
+  {
+    path: '/mine',
+    redirect: '/'
   },
   {
     path: '/console',

@@ -31,9 +31,17 @@ const isElevated = ref(false)
 const displayName = computed(() => authStore.displayName || t('navigation.account'))
 const avatarInitial = computed(() => displayName.value.slice(0, 1).toUpperCase())
 
+const restoreOidcRedirectTarget = async () => {
+  const target = loginDialogStore.consumeOidcRedirectTarget(route.fullPath)
+  if (target) {
+    await router.replace(target)
+  }
+}
+
 const refreshSession = async () => {
   if (authStore.isAuthenticated) {
     isSessionPending.value = false
+    await restoreOidcRedirectTarget()
     return
   }
 
@@ -42,6 +50,7 @@ const refreshSession = async () => {
   isRefreshing.value = true
   try {
     await refreshCurrentUser()
+    await restoreOidcRedirectTarget()
   } catch {
     // Public pages should stay readable when there is no active session.
   } finally {
@@ -59,11 +68,6 @@ const handleLogout = async () => {
   } catch {
     ElMessage.error(t('navigation.failedToSignOut'))
   }
-}
-
-const goToProfile = async () => {
-  isMobileMenuOpen.value = false
-  await router.push('/mine')
 }
 
 const openLogin = () => {
@@ -178,8 +182,7 @@ watch(
           </button>
           <template #dropdown>
             <ElDropdownMenu>
-              <ElDropdownItem @click="goToProfile">{{ displayName }}</ElDropdownItem>
-              <ElDropdownItem divided @click="handleLogout">
+              <ElDropdownItem @click="handleLogout">
                 {{ t('navigation.signOut') }}
               </ElDropdownItem>
             </ElDropdownMenu>
@@ -259,14 +262,6 @@ watch(
         </button>
 
         <div v-else class="grid gap-2">
-          <button
-            type="button"
-            class="flex items-center justify-between rounded-md border border-(--color-border) px-4 py-3 text-sm font-semibold text-(--color-text) transition hover:bg-(--color-surface-muted)"
-            @click="goToProfile"
-          >
-            <span class="truncate">{{ displayName }}</span>
-            <span class="text-(--color-text-muted)">{{ t('navigation.profile') }}</span>
-          </button>
           <button
             type="button"
             class="rounded-md border border-(--color-border) px-4 py-3 text-sm font-semibold text-(--color-text) transition hover:bg-(--color-surface-muted)"

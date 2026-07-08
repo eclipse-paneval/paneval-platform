@@ -38,7 +38,6 @@
     "imagesManage": "Images Manage",
     "signIn": "Sign in",
     "signOut": "Sign out",
-    "profile": "personality",
     "account": "Account",
     "home": "HOME",
     "guide": "GUIDE",
@@ -59,7 +58,20 @@
     "passwordRequired": "Please enter your password",
     "submit": "Sign in",
     "loginSuccess": "Signed in",
-    "loginFailed": "Username or password is incorrect"
+    "loginFailed": "Username or password is incorrect",
+    "sso": {
+      "title": "Sign in to PanEval",
+      "subtitle": "Identity & Access Management",
+      "provider": "Eclipse SSO",
+      "securityMessage": "For your security and the best experience, PanEval uses {provider}. No password is required here; you will be redirected back automatically upon successful verification.",
+      "agreementMessage": "I agree to the {terms} and {privacy}.",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "submit": "Sign in with Eclipse",
+      "redirecting": "Redirecting securely...",
+      "checkingTitle": "Checking sign-in options",
+      "checkingDescription": "Preparing the most secure sign-in method for your account."
+    }
   },
   "router": {
     "home": "Home",
@@ -68,35 +80,7 @@
     "editEvaluation": "Edit Evaluation",
     "evaluationDetail": "Detail",
     "imagesManage": "Images Manage",
-    "createImage": "Create Image",
-    "mine": "User Information"
-  },
-  "mine": {
-    "title": "User Information",
-    "username": "Username",
-    "email": "Email",
-    "phone": "Phone",
-    "organization": "Organization",
-    "organizationEn": "Organization in English",
-    "platform": "Platform",
-    "tasks": "Tasks",
-    "onlineEvaluation": "Online evaluation",
-    "offlineEvaluation": "Offline evaluation",
-    "researcher": "Adaptability",
-    "selfResearchModel": "Self-developed model",
-    "reviewStatus": "Review Status",
-    "huggingFace": "Hugging Face",
-    "notProvided": "Not provided",
-    "enabledCount": "{count} enabled",
-    "platformCount": "{count} platform",
-    "yes": "Yes",
-    "no": "No",
-    "status": {
-      "I": "To be completed",
-      "P": "Auditing",
-      "A": "Approved",
-      "D": "Denied"
-    }
+    "createImage": "Create Image"
   },
   "evaluation": {
     "generalInformation": "General Information",

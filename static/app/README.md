@@ -88,8 +88,8 @@ Important Vite variables:
 Development proxy defaults are defined in `vite.config.ts`:
 
 ```text
-/api -> http://120.92.17.239:9080
-/ws  -> ws://120.92.17.239:9080
+/api -> https://paneval.eclipse.org
+/ws  -> wss://paneval.eclipse.org
 ```
 
 Override them with:

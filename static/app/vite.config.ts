@@ -6,8 +6,8 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apiProxyTarget = env.DEV_API_PROXY_TARGET || 'http://120.92.17.239:9080'
-  const wsProxyTarget = env.DEV_WS_PROXY_TARGET || 'ws://120.92.17.239:9080'
+  const apiProxyTarget = env.DEV_API_PROXY_TARGET || 'https://paneval.eclipse.org'
+  const wsProxyTarget = env.DEV_WS_PROXY_TARGET || 'wss://paneval.eclipse.org'
   const dropOptions = [
     env.VITE_DROP_CONSOLE === 'true' ? 'console' : undefined,
     env.VITE_DROP_DEBUGGER === 'true' ? 'debugger' : undefined
