@@ -15,6 +15,12 @@
   ansible.builtin.command:
     cmd: "{{ miniconda_dir }}/bin/conda run -n {{ env_name }} --cwd {{ local_package_dir }} pip install ."
 
+- name: Install extra pip dependencies
+  ansible.builtin.command:
+    cmd: "{{ miniconda_dir }}/bin/conda run -n {{ env_name }} --cwd {{ local_package_dir }} pip install {{ item }}"
+  loop: "{{ extra_pip_deps }}"
+  when: extra_pip_deps is defined
+
 - name: Pack conda env
   ansible.builtin.shell: |
     eval "$({{ miniconda_dir }}/bin/conda shell.bash hook)"
@@ -22,7 +28,7 @@
     conda uninstall -y conda-pack
     conda install -c conda-forge -y conda-pack
     if [[ -e {{ conda_env_output }}.inprogress ]]; then
-      rm -f {{ conda_env_output }}.inprogresss
+      rm -f {{ conda_env_output }}.inprogress
     fi
     conda-pack -n {{ env_name }} --format tar.gz -o {{ conda_env_output }}.inprogress
     mv {{ conda_env_output }}.inprogress {{ conda_env_output }}

@@ -41,6 +41,8 @@
         py_ver: "3.10"
         local_package_dir: /opt/paneval/backend/third_party/share/feam-lmeval
         conda_env_output: "{{ paneval_executor_data_dir }}/objects/mnt/envs/conda/2024-03-14/conda-full-lmeval.tar.gz"
+        extra_pip_deps:
+          - lm_eval==0.4.8
 
     - name: Pack opencompass env
       ansible.builtin.include_tasks: tasks/conda-pack-env.yml
@@ -70,3 +72,8 @@
         py_ver: "3.10"
         local_package_dir: "$HOME/paneval"
         conda_env_output: "{{ paneval_executor_data_dir }}/objects/mnt/evalmm/conda/20260624/conda-full-evalmm.tar.gz"
+
+    - name: Pack evalmmm code
+      ansible.builtin.command:
+        cmd: "git archive --format=tar.gz --output={{ paneval_executor_data_dir }}/objects/mnt/evalmm/conda/20260624/paneval.tar.gz HEAD"
+        chdir: "$HOME/paneval"
