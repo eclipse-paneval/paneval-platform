@@ -28,11 +28,6 @@ class LMEvalTask(Task):
         dt_path = os.environ.get('LMEVAL_DATASET_DOWNLOAD_PATH', '/share/project/qbw/lm_eval')
         self.dry_run = int(os.environ.get('DRY_RUN_BATCH', 0)) == 1
         print("dry_run", self.dry_run, type(self.dry_run))
-        new_s8_json_path = os.path.join(dt_path, 's8/s8.json')
-        s8_templ_path = os.path.join(dt_path, 's8/_template_yaml.yaml')
-        replace_cmd = f"sed -i -e 's;/home/qinbowen/lm-evaluation-harness-flageval/lm_eval/tasks/s8/s8.json;{new_s8_json_path};' {s8_templ_path}"
-        print('+', replace_cmd)
-        os.system(replace_cmd)
         tasks_dir = os.path.dirname(_p_tasks.__file__)
         link_cmd = f'ln -sf {os.path.join(dt_path, "livebench")} {tasks_dir}/livebench'
         link_cmd += f'&& ln -sf {os.path.join(dt_path, "musr_generative")} {tasks_dir}/musr_generative'

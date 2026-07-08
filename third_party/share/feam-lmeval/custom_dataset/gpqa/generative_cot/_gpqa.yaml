@@ -1,0 +1,13 @@
+group: gpqa_generative_cot
+group_alias: gpqa_generative_cot
+task:
+  - gpqa_diamond_generative_cot
+  - gpqa_extended_generative_cot
+  - gpqa_main_generative_cot
+aggregate_metric_list:
+  - aggregation: mean
+    metric: exact_match
+    filter_list: strict-match
+    weight_by_size: True
+metadata:
+  version: 2

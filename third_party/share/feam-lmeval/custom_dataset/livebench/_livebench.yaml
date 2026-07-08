@@ -1,0 +1,15 @@
+group: livebench_new
+group_alias: livebench_new
+task:
+  - livebench_coding_default
+  - livebench_data_analysis_default
+  - livebench_instruction_following_default
+  - livebench_language_default
+  - livebench_math_default
+  - livebench_reasoning_default
+aggregate_metric_list:
+  - aggregation: mean
+    metric: exact_match
+    weight_by_size: False
+metadata:
+  version: 3

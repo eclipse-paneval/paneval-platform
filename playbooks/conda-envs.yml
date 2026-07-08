@@ -1,4 +1,4 @@
-- hosts: miniconda
+- hosts: dataset
   vars:
     paneval_executor_data_dir: "/mnt/paneval-data/executor"
     miniconda_dir: "$HOME/miniconda3"
