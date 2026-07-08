@@ -5,8 +5,6 @@
     path: /opt/paneval
     state: directory
     mode: '0755'
-    owner: wang
-    group: wang
 
 - name: Push front code to remote server
   ansible.posix.synchronize:
