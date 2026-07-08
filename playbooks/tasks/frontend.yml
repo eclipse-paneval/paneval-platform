@@ -10,6 +10,14 @@
   ansible.posix.synchronize:
     src: "{{ front_code_dir }}/"
     dest: "{{ front_dest_dir }}"
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=node_modules"
+      - "--exclude=*.log"
+      - "--exclude=.env"
+      - "--exclude=local_settings.py"
+      - "--exclude=.docker-compose.env"
+      - "--exclude=.DS_Store"
 
 - name: Erase .git
   ansible.builtin.file:
