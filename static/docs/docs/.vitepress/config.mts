@@ -13,7 +13,7 @@ export default defineConfig({
     }
   },
   themeConfig: {
-    logoLink: 'http://120.92.17.239:9080/',
+    logoLink: 'https://paneval.eclipse.org',
     siteTitle: '<span class="paneval-brand"><span class="paneval-brand-mark">PE</span><span class="paneval-brand-name">PanEval</span></span>',
     // https://vitepress.dev/reference/default-theme-config
     nav: [
