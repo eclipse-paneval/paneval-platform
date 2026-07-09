@@ -11,13 +11,18 @@
         path: /opt/paneval
         state: directory
         mode: '0755'
-        owner: wang
-        group: wang
-
     - name: Push backend code to remote server
       ansible.posix.synchronize:
         src: "{{ backend_code_dir }}/"
         dest: /opt/paneval/backend
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=node_modules"
+          - "--exclude=*.log"
+          - "--exclude=.env"
+          - "--exclude=local_settings.py"
+          - "--exclude=.docker-compose.env"
+          - "--exclude=.DS_Store"
 
     - name: Erase .git
       ansible.builtin.file:
@@ -29,8 +34,6 @@
         path: /opt/paneval/keypair
         state: directory
         mode: '0755'
-        owner: wang
-        group: wang
 
     - name: Check if SSH keypair has been generated
       ansible.builtin.stat:
@@ -70,6 +73,10 @@
           PANEVAL_DEPLOYMENT_STAGE=production
           PANEVAL_DOCS_BUILD_OUT_DIR=/opt/paneval/docs/docs/.vitepress/dist
           PANEVAL_WEB_BUILD_OUT_DIR=/opt/paneval/front/dist-pro
+          PANEVAL_OIDC_ENABLED=1
+          PANEVAL_OIDC_ISSUER_URL={{ paneval_oidc_issuer_url }}
+          PANEVAL_OIDC_CLIENT_ID={{ paneval_oidc_client_id }}
+          PANEVAL_OIDC_CLIENT_SECRET={{ paneval_oidc_client_secret }}
         mode: '0600'
 
     - name: Create settings.py for production
@@ -107,7 +114,7 @@
           CACHES = {
               "default": {
                   "BACKEND": "django_redis.cache.RedisCache",
-                  "LOCATION": f"{REDIS_BASE_URL}/1",
+                  "LOCATION": f"{REDIS_BASE_URL}",
                   "OPTIONS": {
                       "PASSWORD": "{{ paneval_redis_password }}",
                       "CLIENT_CLASS": "django_redis.client.DefaultClient",

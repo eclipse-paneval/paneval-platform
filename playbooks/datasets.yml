@@ -1,0 +1,33 @@
+- hosts: dataset
+  vars:
+    paneval_executor_data_dir: "/mnt/paneval-data/executor"
+  tasks:
+    - name: Ensure dataset object storage path
+      ansible.builtin.file:
+        path: "{{ paneval_executor_data_dir }}/objects/mnt/lm_eval/2025-02-19/"
+        state: directory
+    - name: Push datasets
+      ansible.posix.synchronize:
+        src: "../third_party/share/feam-lmeval/custom_dataset/"
+        dest: "{{ paneval_executor_data_dir }}/objects/mnt/lm_eval/2025-02-19/"
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=node_modules"
+          - "--exclude=*.log"
+          - "--exclude=.env"
+          - "--exclude=local_settings.py"
+          - "--exclude=.docker-compose.env"
+          - "--exclude=.DS_Store"
+
+    - name: Download missed MuSR datasets
+      ansible.builtin.git:
+        repo: 'https://github.com/Zayne-sprague/MuSR.git'
+        dest: "$HOME/MuSR"
+        clone: yes
+        update: yes
+
+    - name: Copy MuSR datasets
+      ansible.builtin.copy:
+        src: "$HOME/MuSR/datasets/"
+        dest: "{{ paneval_executor_data_dir }}/objects/mnt/lm_eval/2025-02-19/musr_generative/datasets/"
+        remote_src: true

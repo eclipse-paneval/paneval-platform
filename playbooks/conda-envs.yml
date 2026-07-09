@@ -1,0 +1,79 @@
+- hosts: dataset
+  vars:
+    paneval_executor_data_dir: "/mnt/paneval-data/executor"
+    miniconda_dir: "$HOME/miniconda3"
+  tasks:
+    - name: Check if Miniconda3 is installed
+      ansible.builtin.stat:
+        path: "{{ miniconda_dir }}"
+      register: miniconda
+
+    - name: Download Miniconda installer
+      ansible.builtin.get_url:
+        url: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        dest: /tmp/miniconda_installer.sh
+        mode: '0755'
+      when: miniconda.stat.exists == False
+
+    - name: Execute silent installation
+      ansible.builtin.command:
+        cmd: "/tmp/miniconda_installer.sh -b -u -p {{ miniconda_dir }}"
+        creates: "{{ miniconda_dir }}/bin/conda"
+      when: miniconda.stat.exists == False
+    - name: Conda tos main
+      ansible.builtin.command:
+        cmd: "{{ miniconda_dir }}/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main"
+
+    - name: Conda tos r
+      ansible.builtin.command:
+        cmd: "{{ miniconda_dir }}/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r"
+
+    - name: Create nlp conda directory
+      ansible.builtin.file:
+        path: "{{ paneval_executor_data_dir }}/objects/mnt/envs/conda/2024-03-14"
+        state: directory
+        mode: '0755'
+
+    - name: Pack lmeval env
+      ansible.builtin.include_tasks: tasks/conda-pack-env.yml
+      vars:
+        env_name: lmeval
+        py_ver: "3.10"
+        local_package_dir: /opt/paneval/backend/third_party/share/feam-lmeval
+        conda_env_output: "{{ paneval_executor_data_dir }}/objects/mnt/envs/conda/2024-03-14/conda-full-lmeval.tar.gz"
+        extra_pip_deps:
+          - lm_eval==0.4.8
+
+    - name: Pack opencompass env
+      ansible.builtin.include_tasks: tasks/conda-pack-env.yml
+      vars:
+        env_name: opencompass
+        py_ver: "3.10"
+        local_package_dir: /opt/paneval/backend/third_party/share/feam-opencompass
+        conda_env_output: "{{ paneval_executor_data_dir }}/objects/mnt/envs/conda/2024-03-14/conda-full-opencompass.tar.gz"
+
+    - name: Fetch paneval/evalmm
+      ansible.builtin.git:
+        repo: 'https://github.com/eclipse-paneval/paneval.git'
+        dest: "$HOME/paneval"
+        clone: yes
+        update: yes
+
+    - name: Create mm conda directory
+      ansible.builtin.file:
+        path: "{{ paneval_executor_data_dir }}/objects/mnt/evalmm/conda/20260624"
+        state: directory
+        mode: '0755'
+
+    - name: Pack evalmm env
+      ansible.builtin.include_tasks: tasks/conda-pack-env.yml
+      vars:
+        env_name: evalmm
+        py_ver: "3.10"
+        local_package_dir: "$HOME/paneval"
+        conda_env_output: "{{ paneval_executor_data_dir }}/objects/mnt/evalmm/conda/20260624/conda-full-evalmm.tar.gz"
+
+    - name: Pack evalmmm code
+      ansible.builtin.command:
+        cmd: "git archive --format=tar.gz --output={{ paneval_executor_data_dir }}/objects/mnt/evalmm/conda/20260624/paneval.tar.gz HEAD"
+        chdir: "$HOME/paneval"

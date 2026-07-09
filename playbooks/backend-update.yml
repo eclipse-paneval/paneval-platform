@@ -8,13 +8,19 @@
         path: /opt/paneval
         state: directory
         mode: '0755'
-        owner: wang
-        group: wang
 
     - name: Push backend code to remote server
       ansible.posix.synchronize:
         src: "{{ backend_code_dir }}/"
         dest: /opt/paneval/backend
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=node_modules"
+          - "--exclude=*.log"
+          - "--exclude=.env"
+          - "--exclude=local_settings.py"
+          - "--exclude=.docker-compose.env"
+          - "--exclude=.DS_Store"
 
     - name: Erase .git
       ansible.builtin.file:
@@ -22,7 +28,7 @@
         state: absent
 
     - name: Poetry install
-      community.docker.docker_compose_v2_run:
+      community.docker.docker_compose_v2_exec:
         project_src: /opt/paneval/backend
         service: web
         chdir: /paneval
