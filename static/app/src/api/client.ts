@@ -1,5 +1,14 @@
 import axios, { AxiosHeaders } from 'axios'
 
+export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+
+export const resolveApiUrl = (path: string, baseUrl = apiBaseUrl) => {
+  const normalizedBaseUrl = baseUrl.replace(/\/+$/, '')
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+
+  return `${normalizedBaseUrl}${normalizedPath}`
+}
+
 const readCookie = (name: string) => {
   const cookie = document.cookie
     .split('; ')
@@ -9,7 +18,7 @@ const readCookie = (name: string) => {
 }
 
 export const httpClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: apiBaseUrl,
   timeout: 30000,
   withCredentials: true
 })

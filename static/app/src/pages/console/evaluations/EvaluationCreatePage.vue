@@ -485,7 +485,7 @@ onBeforeMount(async () => {
           <div class="description">
             {{ evalText.interfaceTip }}
             <a
-              href="https://jwolpxeehx.feishu.cn/wiki/Wh9mwH5KaiGQr2kKXXEcHIhNnug"
+              href="https://github.com/eclipse-paneval/paneval-platform/blob/ccb94fbb3675613c850e216ba6271594923c0ebc/docs/paneval-api-interface-requirements.md"
               target="_blank"
               rel="noopener noreferrer"
               style="color: #1762ee"

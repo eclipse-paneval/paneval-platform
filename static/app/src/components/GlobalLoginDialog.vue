@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { Hide, Lock, User, View } from '@element-plus/icons-vue'
+import { ArrowRight, Hide, Lock, User, View } from '@element-plus/icons-vue'
 import {
   ElAlert,
   ElButton,
+  ElCheckbox,
   ElDialog,
   ElForm,
   ElFormItem,
@@ -15,13 +16,16 @@ import {
 import type { FormInstance, FormRules } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { loginApi, refreshCurrentUser } from '@/api/auth'
+import { getCachedOidcStatus, getOidcStatus, loginApi, oidcLoginUrl, refreshCurrentUser } from '@/api/auth'
 import { useLoginDialogStore } from '@/stores/loginDialog'
+import SsoFingerprintIcon from './SsoFingerprintIcon.vue'
 
 type LoginForm = {
   username: string
   password: string
 }
+
+type LoginMode = 'checking' | 'password' | 'sso'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -29,15 +33,23 @@ const loginDialogStore = useLoginDialogStore()
 const { visible, redirectTo } = storeToRefs(loginDialogStore)
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const loginMode = ref<LoginMode>('password')
 const errorMessage = ref('')
 const isPasswordVisible = ref(false)
 const activeField = ref<keyof LoginForm | null>(null)
 const visualRef = ref<HTMLElement>()
+const ssoAgreement = ref(false)
+const oidcStatusCheckId = ref(0)
+const privacyUrl = 'https://www.eclipse.org/legal/privacy.php'
+const termsUrl = 'https://www.eclipse.org/legal/termsofuse.php'
 
 const form = reactive<LoginForm>({
   username: '',
   password: ''
 })
+
+const isPasswordMode = computed(() => loginMode.value === 'password')
+const dialogWidth = computed(() => (isPasswordMode.value ? '820px' : '560px'))
 
 const rules = computed<FormRules<LoginForm>>(() => ({
   username: [{ required: true, message: t('auth.usernameRequired'), trigger: 'blur' }],
@@ -50,11 +62,17 @@ const resetForm = () => {
   errorMessage.value = ''
   isPasswordVisible.value = false
   activeField.value = null
+  ssoAgreement.value = false
   formRef.value?.clearValidate()
 }
 
 const closeDialog = () => {
   loginDialogStore.close()
+}
+
+const handleDialogClosed = () => {
+  loginMode.value = 'password'
+  loading.value = false
 }
 
 const updateVisualPointer = (event: PointerEvent) => {
@@ -80,6 +98,31 @@ const resetVisualPointer = () => {
   visualEl.style.setProperty('--pointer-y', '0')
   visualEl.style.setProperty('--glow-x', '50%')
   visualEl.style.setProperty('--glow-y', '50%')
+}
+
+const checkOidcAvailability = async () => {
+  const checkId = oidcStatusCheckId.value + 1
+  oidcStatusCheckId.value = checkId
+  loading.value = false
+  errorMessage.value = ''
+  ssoAgreement.value = false
+
+  const cachedStatus = getCachedOidcStatus()
+  if (cachedStatus) {
+    loginMode.value = cachedStatus.enabled ? 'sso' : 'password'
+    return
+  }
+
+  loginMode.value = 'checking'
+
+  try {
+    const status = await getOidcStatus()
+    if (oidcStatusCheckId.value !== checkId || !visible.value) return
+    loginMode.value = status.enabled ? 'sso' : 'password'
+  } catch {
+    if (oidcStatusCheckId.value !== checkId || !visible.value) return
+    loginMode.value = 'password'
+  }
 }
 
 const submitLogin = async () => {
@@ -114,12 +157,21 @@ const submitLogin = async () => {
   }
 }
 
+const submitSsoLogin = () => {
+  if (!ssoAgreement.value || loading.value) return
+
+  loading.value = true
+  loginDialogStore.persistOidcRedirectTarget()
+  window.location.assign(oidcLoginUrl)
+}
+
 watch(visible, (isVisible) => {
   if (isVisible) {
-    errorMessage.value = ''
+    void checkOidcAvailability()
     return
   }
 
+  oidcStatusCheckId.value += 1
   resetForm()
 })
 </script>
@@ -127,16 +179,22 @@ watch(visible, (isVisible) => {
 <template>
   <ElDialog
     v-model="visible"
-    class="global-login-dialog"
-    width="820px"
+    :class="['global-login-dialog', { 'global-login-dialog--sso': !isPasswordMode }]"
+    :width="dialogWidth"
     :show-close="!loading"
     :close-on-click-modal="!loading"
     :close-on-press-escape="!loading"
     align-center
     append-to-body
     @close="closeDialog"
+    @closed="handleDialogClosed"
   >
-    <div class="login-panel" @pointermove="updateVisualPointer" @pointerleave="resetVisualPointer">
+    <div
+      v-if="loginMode === 'password'"
+      class="login-panel"
+      @pointermove="updateVisualPointer"
+      @pointerleave="resetVisualPointer"
+    >
       <button
         type="button"
         class="login-panel__close"
@@ -270,11 +328,90 @@ watch(visible, (isVisible) => {
         </ElForm>
       </section>
     </div>
+
+    <div v-else class="sso-panel" :class="{ 'sso-panel--checking': loginMode === 'checking' }">
+      <button
+        type="button"
+        class="sso-panel__close"
+        :aria-label="t('common.cancel')"
+        :disabled="loading"
+        @click="closeDialog"
+      >
+        <span aria-hidden="true" />
+      </button>
+
+      <div class="sso-panel__accent" aria-hidden="true" />
+
+      <section class="sso-panel__content" aria-labelledby="sso-panel-title">
+        <div
+          class="sso-panel__identity-icon"
+          :class="{ 'sso-panel__identity-icon--checking': loginMode === 'checking' }"
+          aria-hidden="true"
+        >
+          <SsoFingerprintIcon />
+        </div>
+
+        <div class="sso-panel__header">
+          <h2 id="sso-panel-title">
+            {{ loginMode === 'sso' ? t('auth.sso.title') : t('auth.sso.checkingTitle') }}
+          </h2>
+          <p>
+            {{
+              loginMode === 'sso' ? t('auth.sso.subtitle') : t('auth.sso.checkingDescription')
+            }}
+          </p>
+        </div>
+
+        <div v-if="loginMode === 'sso'" class="sso-panel__security-note">
+          <ElIcon class="sso-panel__security-icon"><Lock /></ElIcon>
+          <i18n-t keypath="auth.sso.securityMessage" tag="p">
+            <template #provider>
+              <strong>{{ t('auth.sso.provider') }}</strong>
+            </template>
+          </i18n-t>
+        </div>
+
+        <ElCheckbox
+          v-if="loginMode === 'sso'"
+          v-model="ssoAgreement"
+          class="sso-panel__agreement"
+          :disabled="loading"
+        >
+          <i18n-t keypath="auth.sso.agreementMessage" tag="span">
+            <template #terms>
+              <a :href="termsUrl" target="_blank" rel="noopener noreferrer" @click.stop>
+                {{ t('auth.sso.terms') }}
+              </a>
+            </template>
+            <template #privacy>
+              <a :href="privacyUrl" target="_blank" rel="noopener noreferrer" @click.stop>
+                {{ t('auth.sso.privacy') }}
+              </a>
+            </template>
+          </i18n-t>
+        </ElCheckbox>
+
+        <button
+          v-if="loginMode === 'sso'"
+          type="button"
+          class="sso-panel__submit"
+          :class="{ 'is-disabled': !ssoAgreement || loading, 'is-loading': loading }"
+          :disabled="!ssoAgreement || loading"
+          @click="submitSsoLogin"
+        >
+          <ElIcon v-if="!loading" class="sso-panel__submit-shield"><Lock /></ElIcon>
+          <span>{{ loading ? t('auth.sso.redirecting') : t('auth.sso.submit') }}</span>
+          <ElIcon v-if="!loading" class="sso-panel__submit-arrow"><ArrowRight /></ElIcon>
+        </button>
+      </section>
+    </div>
   </ElDialog>
 </template>
 
 <style scoped>
 :global(.global-login-dialog) {
+  --el-dialog-padding-primary: 0;
+
   border-radius: 8px;
   overflow: hidden;
 }
@@ -285,6 +422,277 @@ watch(visible, (isVisible) => {
 
 :global(.global-login-dialog .el-dialog__body) {
   padding: 0;
+}
+
+:global(.global-login-dialog--sso) {
+  border-radius: 28px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sso-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 676px;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 22px 54px rgb(31 48 89 / 16%);
+}
+
+.sso-panel__accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 10px;
+  border-radius: 28px 28px 0 0;
+  background: linear-gradient(90deg, #1762ee 0%, #3357f4 62%, #5638f4 100%);
+}
+
+.sso-panel__close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  z-index: 2;
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  color: #91a0bd;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.sso-panel__close span,
+.sso-panel__close span::after {
+  display: block;
+  width: 14px;
+  height: 1.7px;
+  content: '';
+  background: currentcolor;
+  border-radius: 999px;
+}
+
+.sso-panel__close span {
+  transform: rotate(45deg);
+}
+
+.sso-panel__close span::after {
+  transform: rotate(90deg);
+}
+
+.sso-panel__close:hover:not(:disabled) {
+  color: #1762ee;
+  background: #f3f6fc;
+  transform: translateY(-1px);
+}
+
+.sso-panel__close:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.sso-panel__content {
+  display: flex;
+  min-height: 676px;
+  flex-direction: column;
+  align-items: center;
+  padding: 62px 36px 50px;
+}
+
+.sso-panel__identity-icon {
+  display: inline-flex;
+  width: 80px;
+  height: 80px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  border: 1px solid rgb(23 98 238 / 8%);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 22%, rgb(255 255 255 / 92%), transparent 42%),
+    linear-gradient(145deg, #edf5ff 0%, #dbe9ff 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 70%),
+    0 14px 26px rgb(23 98 238 / 13%);
+  color: #1762ee;
+  font-size: 38px;
+}
+
+.sso-panel__identity-icon svg {
+  width: 46px;
+  height: 46px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3.2;
+}
+
+.sso-panel__identity-icon--checking {
+  animation: sso-breathe 1.2s ease-in-out infinite;
+}
+
+.sso-panel__header {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.sso-panel__header h2 {
+  margin: 0;
+  color: #1e2a3e;
+  font-size: 31px;
+  font-weight: 820;
+  letter-spacing: 0;
+  line-height: 1.12;
+}
+
+.sso-panel__header p {
+  margin: 13px 0 0;
+  color: #64748f;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.sso-panel__security-note {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 52px;
+  padding: 16px;
+  border: 1px solid #edf1f7;
+  border-radius: 18px;
+  background: #fbfcff;
+  color: #475671;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 80%);
+}
+
+.sso-panel__security-icon {
+  margin-top: 2px;
+  color: #8da0bc;
+  font-size: 22px;
+}
+
+.sso-panel__security-note p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.sso-panel__security-note strong {
+  color: #2c3c55;
+  font-weight: 780;
+}
+
+.sso-panel__agreement {
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+  align-self: flex-start;
+  align-items: center;
+  margin-top: 30px;
+  color: #475671;
+}
+
+.sso-panel__agreement :deep(.el-checkbox__input) {
+  align-self: center;
+  margin-top: 0;
+}
+
+.sso-panel__agreement :deep(.el-checkbox__label) {
+  color: #475671;
+  font-size: 16px;
+  line-height: 1.45;
+  padding-left: 8px;
+  white-space: normal;
+}
+
+.sso-panel__agreement a {
+  color: #075ef4;
+  text-decoration: none;
+}
+
+.sso-panel__agreement a:hover {
+  text-decoration: underline;
+}
+
+.sso-panel__submit {
+  display: inline-flex;
+  width: 100%;
+  height: 70px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 18px;
+  font: inherit;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 780;
+  text-decoration: none;
+  transition:
+    background 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.sso-panel__submit:not(.is-disabled) {
+  background: linear-gradient(100deg, #1762ee 0%, #1458ee 58%, #5142ec 100%);
+  box-shadow: 0 14px 28px rgb(23 98 238 / 24%);
+  cursor: pointer;
+}
+
+.sso-panel__submit:not(.is-disabled):hover {
+  box-shadow: 0 18px 34px rgb(23 98 238 / 30%);
+  transform: translateY(-1px);
+}
+
+.sso-panel__submit.is-disabled,
+.sso-panel__submit.is-disabled:hover,
+.sso-panel__submit.is-loading,
+.sso-panel__submit.is-loading:hover {
+  background: #cbd5e1;
+  color: #fff;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.sso-panel__submit-shield,
+.sso-panel__submit-arrow {
+  color: currentcolor;
+  font-size: 22px;
+  opacity: 0.62;
+}
+
+.sso-panel--checking .sso-panel__content {
+  justify-content: center;
+}
+
+.sso-panel--checking .sso-panel__header {
+  margin-top: 28px;
+}
+
+@keyframes sso-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.04);
+  }
 }
 
 .login-panel {
@@ -780,6 +1188,53 @@ watch(visible, (isVisible) => {
     width: calc(100vw - 32px) !important;
   }
 
+  .sso-panel {
+    min-height: auto;
+    border-radius: 22px;
+  }
+
+  .sso-panel__content {
+    min-height: auto;
+    padding: 48px 26px 34px;
+  }
+
+  .sso-panel__identity-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    font-size: 32px;
+  }
+
+  .sso-panel__header {
+    margin-top: 30px;
+  }
+
+  .sso-panel__header h2 {
+    font-size: 26px;
+  }
+
+  .sso-panel__header p {
+    font-size: 16px;
+  }
+
+  .sso-panel__security-note {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 38px;
+    padding: 22px 20px;
+  }
+
+  .sso-panel__security-note p,
+  .sso-panel__agreement :deep(.el-checkbox__label) {
+    font-size: 16px;
+  }
+
+  .sso-panel__submit {
+    height: 60px;
+    border-radius: 16px;
+    font-size: 18px;
+  }
+
   .login-panel {
     display: block;
     padding: 24px;
@@ -813,6 +1268,10 @@ watch(visible, (isVisible) => {
   .login-panel__orbit-node,
   .login-panel__score {
     transform: none;
+  }
+
+  .sso-panel__identity-icon--checking {
+    animation: none;
   }
 }
 </style>

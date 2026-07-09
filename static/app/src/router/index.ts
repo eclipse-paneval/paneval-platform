@@ -30,16 +30,26 @@ router.beforeEach(async (to) => {
   }
 
   const authStore = useAuthStore()
+  const loginDialogStore = useLoginDialogStore()
 
   if (authStore.isAuthenticated) {
+    const target = loginDialogStore.consumeOidcRedirectTarget(to.fullPath)
+    if (target) {
+      return target
+    }
+
     return true
   }
 
   try {
     await refreshCurrentUser()
+    const target = loginDialogStore.consumeOidcRedirectTarget(to.fullPath)
+    if (target) {
+      return target
+    }
+
     return true
   } catch {
-    const loginDialogStore = useLoginDialogStore()
     loginDialogStore.open({
       redirectTo: to.fullPath
     })
