@@ -6,7 +6,7 @@ The evaluation focuses on assessing various capabilities of large language model
 
 The platform provides a Natural Language Processing \(NLP\) evaluation module for Large Language Models \(LLMs\)\.
 
-- **Supported task types:** It covers a wide range of NLP scenarios, including but not limited to text classification, reading comprehension, information extraction, machine translation, and dialogue generation\.
+- **Supported task types:** It covers a wide range of NLP scenarios, including but not limited to text classification, reading comprehension, information extraction, machine translation, and dialogue generation\. 
 
 - **The evaluation assesses eight core capabilities:** Basic Language Processing, Mathematical Ability, Coding Proficiency, Knowledge Application, Reasoning Ability, Task Solving, Instruction Following, and Safety and Values\.
 
@@ -18,7 +18,7 @@ The platform provides a Natural Language Processing \(NLP\) evaluation module fo
 
 - **Domain**
 
-    - Includes NLP and Multimodal
+    - Includes NLP and Multimodal 
 
     - When NLP is selected, it is highlighted by default
 
@@ -26,29 +26,29 @@ The platform provides a Natural Language Processing \(NLP\) evaluation module fo
 
 **Model Name**
 
-- Enter the model name, up to 128 characters
+- Enter the model name, up to 128 characters 
 
 **Description \(Optional\)**
 
-- Enter a description of the model, up to 256 characters
+- Enter a description of the model, up to 256 characters 
 
 **Datasets**
 
-- Users can select multiple datasets for evaluation
+- Users can select multiple datasets for evaluation 
 
-- Evaluation dataset list [PanEval Phase I Evaluation Dataset List](https://github.com/eclipse-paneval/paneval-platform/blob/ccb94fbb3675613c850e216ba6271594923c0ebc/docs/paneval-phase-i-evaluation-dataset-list.md)
+- Evaluation datasets from [PanEval Phase I Evaluation Dataset List](https://github.com/eclipse-paneval/paneval-platform/blob/ccb94fbb3675613c850e216ba6271594923c0ebc/docs/paneval-phase-i-evaluation-dataset-list.md)
 
 **Deployment Method**
 
-- Only **“Online Evaluation”** is available
+- Only **“Online Evaluation”** is available 
 
-- Selected by default and cannot be modified by users
+- Selected by default and cannot be modified by users 
 
 **Dimensions**
 
 - Two options are available: **Accuracy Evaluation** and **Robustness Evaluation**
 
-- **Accuracy Evaluation** is selected by default and cannot be deselected
+- **Accuracy Evaluation** is selected by default and cannot be deselected 
 
 - **Robustness Evaluation** is optional; if selected, the user must choose an **Environment** parameter
 
@@ -130,7 +130,7 @@ The platform provides a Natural Language Processing \(NLP\) evaluation module fo
     - If the user unchecks it, a red warning message will appear:
     “Please Select ‘I understand that manually labeled test set labels cannot be used during model training and in the submitted results’”
 
-- Cancel/Submit
+- Cancel/Submit 
 
     - Click **Cancel** to return to the evaluation console page\.
 
@@ -166,7 +166,7 @@ Assessing the model's multi\-dimensional performance in tasks such as image\-tex
 
 - **Evaluation Task \(Task \& Dataset Selection\)**
 
-    - Select evaluation tasks and datasets from the PanEval Phase I dataset list[PanEval Phase I Evaluation Dataset List](https://github.com/eclipse-paneval/paneval-platform/blob/ccb94fbb3675613c850e216ba6271594923c0ebc/docs/paneval-phase-i-evaluation-dataset-list.md)
+    - Select evaluation tasks and datasets from [PanEval Phase I Evaluation Dataset List](https://github.com/eclipse-paneval/paneval-platform/blob/ccb94fbb3675613c850e216ba6271594923c0ebc/docs/paneval-phase-i-evaluation-dataset-list.md)
 
 - **Deployment Method**
 
