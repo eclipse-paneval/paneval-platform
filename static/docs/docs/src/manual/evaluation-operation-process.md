@@ -166,7 +166,7 @@ Assessing the model's multi\-dimensional performance in tasks such as image\-tex
 
 - **Evaluation Task \(Task \& Dataset Selection\)**
 
-    - Select evaluation tasks and datasets from the PanEval Phase I dataset list[PanEval一期评测数据集清单](https://jwolpxeehx.feishu.cn/wiki/Jtn2w6yyVibbLdkmEGCcm1b7nQe)
+    - Select evaluation tasks and datasets from the PanEval Phase I dataset list[PanEval Phase I Evaluation Dataset List](https://github.com/eclipse-paneval/paneval-platform/blob/ccb94fbb3675613c850e216ba6271594923c0ebc/docs/paneval-phase-i-evaluation-dataset-list.md)
 
 - **Deployment Method**
 
