@@ -2,9 +2,9 @@
 
 ## Sign In
 
-Click the **Sign in** button to open the login page\. Enter your **Username** and **Password**, then click **Sign in** again to complete the login process and enter the homepage\.
+Click the **Sign in** button to open the **Sign in to PanEval** panel\. Select the agreement checkbox, then click **Sign in with Eclipse** to continue with Eclipse SSO\.
 
-![Image](images/2.png)
+![Image](images/sign.png)
 
 ## Enter the evaluation console page
 
