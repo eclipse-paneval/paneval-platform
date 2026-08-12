@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElButton, ElCol, ElEmpty, ElRow } from 'element-plus'
+import { ElAlert, ElButton, ElCol, ElEmpty, ElRow } from 'element-plus'
 import { computed, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getEvaluationBatchResults } from '@/api/evaluations'
@@ -64,6 +64,12 @@ watch(() => props.batchId, loadResults, { immediate: true })
   </ElRow>
 
   <template v-if="loading || hasResultData">
+    <ElAlert
+      class="mb-4"
+      :title="t('evaluationBatch.resultDisclaimer')"
+      type="info"
+      :closable="false"
+    />
     <BlockTitle class="my-[16px]">{{ t('evaluationBatch.accuracyEvaluation') }}</BlockTitle>
     <AccuracyTable :table-data="accTableData" :loading="loading" />
 

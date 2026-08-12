@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElButton, ElEmpty, ElSkeleton, ElTable, ElTableColumn, ElText } from 'element-plus'
+import { ElAlert, ElButton, ElEmpty, ElSkeleton, ElTable, ElTableColumn, ElText } from 'element-plus'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getEvaluationBatchResults } from '@/api/evaluations'
@@ -84,6 +84,13 @@ watch(() => props.batchId, loadResults, { immediate: true })
         {{ t('evaluationBatch.submitToLeaderboard') }}
       </ElButton>
     </div>
+    <ElAlert
+      v-if="showEvaluationDetail"
+      class="mb-4"
+      :title="t('evaluationBatch.resultDisclaimer')"
+      type="info"
+      :closable="false"
+    />
     <ElSkeleton :rows="6" animated :throttle="0" :loading="loading">
       <template #default>
         <ElEmpty v-if="!results.length" :description="t('common.empty')" />

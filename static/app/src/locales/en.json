@@ -208,6 +208,7 @@
     "onlineModel": "Online Model",
     "progressTable": "Progress Table",
     "accuracyEvaluation": "Accuracy Evaluation",
+    "resultDisclaimer": "The evaluation results provided by this tool are for research reference only and do not constitute deployment recommendations for any domain, especially high-risk scenarios.",
     "robustnessEvaluation": "Robustness Evaluation",
     "robustnessContentScrambling": "Robustness Evaluation (Content Scrambling)",
     "robustnessFormatScrambling": "Robustness Evaluation (Format Scrambling)",
