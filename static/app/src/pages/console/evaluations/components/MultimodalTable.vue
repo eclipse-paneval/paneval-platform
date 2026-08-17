@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElButton, ElEmpty, ElSkeleton, ElTable, ElTableColumn, ElText } from 'element-plus'
+import { ElAlert, ElButton, ElEmpty, ElSkeleton, ElTable, ElTableColumn, ElText } from 'element-plus'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getEvaluationBatchResults } from '@/api/evaluations'
@@ -24,6 +24,7 @@ const accuracyResults = computed(() => results.value.filter((item) => item.lbx !
 const displayRows = computed(() =>
   showEvaluationDetail.value ? accuracyResults.value : results.value
 )
+const hasResultData = computed(() => results.value.length > 0)
 const robustnessResults = computed(() => {
   const grouped: Record<string, Record<string, Record<string, unknown>[]>> = {}
 
@@ -84,10 +85,17 @@ watch(() => props.batchId, loadResults, { immediate: true })
         {{ t('evaluationBatch.submitToLeaderboard') }}
       </ElButton>
     </div>
-    <ElSkeleton :rows="6" animated :throttle="0" :loading="loading">
-      <template #default>
-        <ElEmpty v-if="!results.length" :description="t('common.empty')" />
-        <template v-else>
+
+    <template v-if="loading || hasResultData">
+      <ElSkeleton :rows="6" animated :throttle="0" :loading="loading">
+        <template #default>
+          <ElAlert
+            v-if="showEvaluationDetail && hasResultData"
+            class="mb-4"
+            :title="t('evaluationBatch.resultDisclaimer')"
+            type="info"
+            :closable="false"
+          />
           <BlockTitle v-if="showEvaluationDetail" class="mb-[16px]">
             {{ t('evaluationBatch.accuracyEvaluation') }}
           </BlockTitle>
@@ -134,66 +142,67 @@ watch(() => props.batchId, loadResults, { immediate: true })
               </template>
             </ElTableColumn>
           </ElTable>
-        </template>
-        <template v-if="showEvaluationDetail && results.length">
-          <BlockTitle class="my-[16px]">
-            {{ t('evaluationBatch.robustnessEvaluation') }}
-          </BlockTitle>
-          <p class="mb-[16px] ml-[12px]">
-            <ElText type="primary" size="small">
-              {{ t('evaluationBatch.robustnessTip') }}
-            </ElText>
-          </p>
-          <template v-if="hasRobustnessResults">
-            <template v-for="(datasets, task) in robustnessResults" :key="task">
-              <template v-for="(list, dataset) in datasets" :key="dataset">
-                <ElTable stripe :data="list" size="small" border class="mb-[8px]">
-                  <ElTableColumn :label="t('evaluationBatch.task')">
-                    <template #default>
-                      <ElText size="small" type="info">{{ task }}</ElText>
-                    </template>
-                  </ElTableColumn>
-                  <ElTableColumn :label="t('evaluationBatch.dataset')">
-                    <template #default>
-                      <ElText size="small" type="info">{{ dataset }}</ElText>
-                    </template>
-                  </ElTableColumn>
-                  <ElTableColumn :label="t('common.status')">
-                    <template #default="{ row }">
-                      <ElText :type="multimodalStatusType(String(row.status ?? ''))" size="small">
-                        {{ multimodalStatusTitle(String(row.status ?? '')) }}
-                      </ElText>
-                    </template>
-                  </ElTableColumn>
-                  <ElTableColumn
-                    :label="`${t('evaluationBatch.indicator')} & ${t('evaluationBatch.value')}`"
-                    width="295"
-                    header-align="center"
-                  >
-                    <template #default="{ row }">
-                      <MmTree :tree-data="metricData(row)" />
-                    </template>
-                  </ElTableColumn>
-                  <ElTableColumn :label="t('evaluationBatch.startTime')" show-overflow-tooltip>
-                    <template #default="{ row }">
-                      <ElText size="small" type="info">
-                        {{ formatDate(rowDataValue(row, 'starttime')) }}
-                      </ElText>
-                    </template>
-                  </ElTableColumn>
-                  <ElTableColumn :label="t('evaluationBatch.stopTime')" show-overflow-tooltip>
-                    <template #default="{ row }">
-                      <ElText size="small" type="info">
-                        {{ formatDate(rowDataValue(row, 'endtime')) }}
-                      </ElText>
-                    </template>
-                  </ElTableColumn>
-                </ElTable>
+          <template v-if="showEvaluationDetail && hasResultData">
+            <BlockTitle class="my-[16px]">
+              {{ t('evaluationBatch.robustnessEvaluation') }}
+            </BlockTitle>
+            <p class="mb-[16px] ml-[12px]">
+              <ElText type="primary" size="small">
+                {{ t('evaluationBatch.robustnessTip') }}
+              </ElText>
+            </p>
+            <template v-if="hasRobustnessResults">
+              <template v-for="(datasets, task) in robustnessResults" :key="task">
+                <template v-for="(list, dataset) in datasets" :key="dataset">
+                  <ElTable stripe :data="list" size="small" border class="mb-[8px]">
+                    <ElTableColumn :label="t('evaluationBatch.task')">
+                      <template #default>
+                        <ElText size="small" type="info">{{ task }}</ElText>
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn :label="t('evaluationBatch.dataset')">
+                      <template #default>
+                        <ElText size="small" type="info">{{ dataset }}</ElText>
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn :label="t('common.status')">
+                      <template #default="{ row }">
+                        <ElText :type="multimodalStatusType(String(row.status ?? ''))" size="small">
+                          {{ multimodalStatusTitle(String(row.status ?? '')) }}
+                        </ElText>
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn
+                      :label="`${t('evaluationBatch.indicator')} & ${t('evaluationBatch.value')}`"
+                      width="295"
+                      header-align="center"
+                    >
+                      <template #default="{ row }">
+                        <MmTree :tree-data="metricData(row)" />
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn :label="t('evaluationBatch.startTime')" show-overflow-tooltip>
+                      <template #default="{ row }">
+                        <ElText size="small" type="info">
+                          {{ formatDate(rowDataValue(row, 'starttime')) }}
+                        </ElText>
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn :label="t('evaluationBatch.stopTime')" show-overflow-tooltip>
+                      <template #default="{ row }">
+                        <ElText size="small" type="info">
+                          {{ formatDate(rowDataValue(row, 'endtime')) }}
+                        </ElText>
+                      </template>
+                    </ElTableColumn>
+                  </ElTable>
+                </template>
               </template>
             </template>
           </template>
         </template>
-      </template>
-    </ElSkeleton>
+      </ElSkeleton>
+    </template>
+    <ElEmpty v-else :description="t('common.empty')" />
   </div>
 </template>
