@@ -65,6 +65,7 @@ watch(() => props.batchId, loadResults, { immediate: true })
 
   <template v-if="loading || hasResultData">
     <ElAlert
+      v-if="hasResultData && !loading"
       class="mb-4"
       :title="t('evaluationBatch.resultDisclaimer')"
       type="info"

@@ -87,15 +87,15 @@ watch(() => props.batchId, loadResults, { immediate: true })
     </div>
 
     <template v-if="loading || hasResultData">
-      <ElAlert
-        v-if="showEvaluationDetail"
-        class="mb-4"
-        :title="t('evaluationBatch.resultDisclaimer')"
-        type="info"
-        :closable="false"
-      />
       <ElSkeleton :rows="6" animated :throttle="0" :loading="loading">
         <template #default>
+          <ElAlert
+            v-if="showEvaluationDetail && hasResultData"
+            class="mb-4"
+            :title="t('evaluationBatch.resultDisclaimer')"
+            type="info"
+            :closable="false"
+          />
           <BlockTitle v-if="showEvaluationDetail" class="mb-[16px]">
             {{ t('evaluationBatch.accuracyEvaluation') }}
           </BlockTitle>
