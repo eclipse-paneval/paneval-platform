@@ -72,6 +72,9 @@
         py_ver: "3.10"
         local_package_dir: "$HOME/paneval"
         conda_env_output: "{{ paneval_executor_data_dir }}/objects/mnt/evalmm/conda/20260624/conda-full-evalmm.tar.gz"
+        extra_pip_deps:
+          - num2words
+          - scipy
 
     - name: Pack evalmmm code
       ansible.builtin.command:

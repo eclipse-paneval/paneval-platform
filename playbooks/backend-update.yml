@@ -35,6 +35,15 @@
         command: /bin/bash -c "poetry install --only main --no-root"
         files:
           - docker-compose.prod.yml
+    - name: Run migrations
+      run_once: true
+      community.docker.docker_compose_v2_exec:
+        project_src: /opt/paneval/backend
+        service: web
+        chdir: /paneval
+        command: /bin/bash -c "poetry run ./manage.py migrate"
+        files:
+          - docker-compose.prod.yml
     - name: Restart service
       community.docker.docker_compose_v2:
         project_src: /opt/paneval/backend

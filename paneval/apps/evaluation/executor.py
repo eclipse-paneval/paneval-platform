@@ -17,16 +17,43 @@ class ExecutorError(Exception):
     pass
 
 
+class ExecutorInstanceError(ExecutorError):
+    pass
+
+
+class ExecutorUnreachable(ExecutorError):
+    pass
+
+
 class ExecutorService:
-    def __init__(self, model_root: str, conf: Dict[str, Any], result: Dict[str, Any]):
+    def __init__(
+            self,
+            model_root: str,
+            conf: Dict[str, Any],
+            result: Dict[str, Any],
+            instance: Optional[str] = None,
+    ):
         self.model_root: str = model_root
         self.conf = conf
         self.result = result
         self.result_prefix: str = result.get('prefix') or ''
+        self.instance = instance or conf['online_ssh_host']
+        self._online_ssh_host, self._online_ssh_port = self._resolve_instance(instance)
 
     @classmethod
-    def create_instance(cls):
-        return cls(**settings.SSH_EXECUTOR)
+    def create_instance(cls, instance: Optional[str] = None):
+        return cls(instance=instance, **settings.SSH_EXECUTOR)
+
+    def _resolve_instance(self, instance: Optional[str]) -> Tuple[str, int]:
+        host = self.conf['online_ssh_host']
+        port = int(self.conf.get('online_ssh_port') or 22)
+        if not instance:
+            return host, port
+
+        configured_host, separator, configured_port = instance.rpartition(':')
+        if separator and configured_port.isdigit():
+            return configured_host, int(configured_port)
+        return instance, port
 
     @property
     def job_root(self) -> str:
@@ -62,7 +89,6 @@ class ExecutorService:
         _environ['LOG_PATH'] = log_path
         _environ['EVAL_LOG_PATH'] = self.get_log_path(batch_id, 'eval', try_sequence)
         _environ['FEAM_VENV'] = os.path.join(_environ['THIRD_PARTY'], '/tmp/venv')
-        _environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
         _environ['HF_HOME'] = '/share/project/huggingface-240306' # Update this to refresh huggingface cache
         # # https://huggingface.co/docs/transformers/installation#offline-mode
         # _environ['HF_DATASETS_OFFLINE'] = '1'
@@ -208,11 +234,8 @@ class ExecutorService:
         return f'{batch_id}-{kind}'
 
     def online_ssh_exe_cmd(self, ssh_cmd: str) -> List[str]:
-        try:
-            host = self.conf['online_ssh_host']
-        except TypeError:
-            host = self.conf['online_ssh_host']
-        port = str(self.conf.get('online_ssh_port') or 22)
+        host = self._online_ssh_host
+        port = str(self._online_ssh_port)
         cmd = [
             'ssh', "-o", "StrictHostKeyChecking no",
             '-CAXY', host,
@@ -223,11 +246,8 @@ class ExecutorService:
         return cmd
 
     def online_scp_to_remote(self, local: str, dst: str) -> List[str]:
-        try:
-            host = self.conf['online_ssh_host']
-        except TypeError:
-            host = self.conf['online_ssh_host']
-        port = str(self.conf.get('online_ssh_port') or 22)
+        host = self._online_ssh_host
+        port = str(self._online_ssh_port)
         cmd = [
             'scp', "-o", "StrictHostKeyChecking no",
             "-P", port,
@@ -238,11 +258,8 @@ class ExecutorService:
         return cmd
 
     def online_rsync_to_remote(self, local: str, dst: str) -> List[str]:
-        try:
-            host = self.conf['online_ssh_host']
-        except TypeError:
-            host = self.conf['online_ssh_host']
-        port = str(self.conf.get('online_ssh_port') or 22)
+        host = self._online_ssh_host
+        port = str(self._online_ssh_port)
         cmd = [
             'rsync', '-av', '-e', f'ssh -p {port}',
             local,
@@ -257,3 +274,24 @@ class ExecutorService:
         return self.result_prefix + f'try-{try_sequence}-'
 
 service = ExecutorService.create_instance()
+_services: Dict[str, ExecutorService] = {}
+
+
+def list_instances() -> List[str]:
+    instances = getattr(settings, 'PANEVAL_SSH_EXECUTOR_INSTANCES', None) or []
+    return list(instances) or [settings.SSH_EXECUTOR['conf']['online_ssh_host']]
+
+
+def pick_instance(batch_id: int) -> str:
+    instances = list_instances()
+    return instances[batch_id % len(instances)]
+
+
+def get_service(instance: Optional[str] = None) -> ExecutorService:
+    if not instance:
+        return service
+    if instance not in list_instances():
+        raise ExecutorInstanceError(f'executor instance {instance} is not configured')
+    if instance not in _services:
+        _services[instance] = ExecutorService.create_instance(instance)
+    return _services[instance]

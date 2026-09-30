@@ -25,6 +25,8 @@ services:
     build: ./deployments/docker/ssh-online-executor
     env_file:
       - .env
+    ports:
+      - "${PANEVAL_EXECUTOR_SSH_BIND:-0.0.0.0}:${PANEVAL_EXECUTOR_SSH_PORT:-3022}:3022"
     volumes:
       - ${PANEVAL_EXECUTOR_DATA_DIR:-./executor-data}:/share/project
     networks:

@@ -52,6 +52,7 @@ class Batch(models.Model):
     user_id = models.BigIntegerField()
     celery_task_id = models.CharField(max_length=40, db_index=True)
     joint_job_id = models.CharField(max_length=40, default='')
+    executor_instance = models.CharField(max_length=255, default='', blank=True)
     resource = models.JSONField()
     priority = models.CharField(max_length=20, default='high')
     submitted = models.BooleanField(default=False)

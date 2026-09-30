@@ -23,8 +23,8 @@ from django.utils import timezone
 
 from ...storage import store
 from ..evaluation import executor
-from ..evaluation.models import Evaluation, Dataset,  CvTaskResult, SfTaskResult, ImageData
-from ..evaluation.tasks import ONLINE_JOB_BATCH_ID
+from ..evaluation.models import Evaluation, Dataset, CvTaskResult, ImageData
+from ..evaluation.tasks import executor_instance_ready
 from ..user.models import User
 from . import models
 from .utils import copy_tokenizer_to, get_nlp_scenario_options, merge_lbx_batch
@@ -257,8 +257,11 @@ def cancel_batch(
         )
         if eva.sence == Evaluation.Sence.API.value:
             kill_online.apply_async(
-                args=(f"{batch_id}.{batch.try_sequence}",),
-                countdown=10
+                args=(
+                    f"{batch_id}.{batch.try_sequence}",
+                    batch.executor_instance or None,
+                ),
+                countdown=10,
             )
         elif batch.joint_job_id:
             executor.service.stop_job(batch.joint_job_id)
@@ -266,11 +269,14 @@ def cancel_batch(
 
 
 @shared_task()
-def kill_online(batch_id):
+def kill_online(batch_key, instance=None):
     try:
-        cmd = executor.service.online_ssh_exe_cmd(f"bash ~/online_third_party/kill.sh {batch_id}")
+        service = executor.get_service(instance)
+        cmd = service.online_ssh_exe_cmd(
+            f"bash ~/online_third_party/kill.sh {batch_key}"
+        )
         subprocess.run(cmd)
-    except:
+    except Exception:
         traceback.print_exc()
 
 
@@ -282,6 +288,24 @@ def run_on_executor(batch_id: int, try_sequence: int):
         logger.error("failed to notify status changed", exc_info=True)
 
     watch_batch_timeout(batch_id)
+
+    batch = models.Batch.objects.get(pk=batch_id)
+    if batch.try_sequence != try_sequence:
+        return
+    configured_instances = executor.list_instances()
+    if batch.executor_instance not in configured_instances:
+        previous_instance = batch.executor_instance
+        batch.executor_instance = executor.pick_instance(batch.pk)
+        models.Batch.objects.filter(pk=batch.pk).update(
+            executor_instance=batch.executor_instance,
+        )
+        if previous_instance:
+            logger.warning(
+                're-pinned batch %s from removed executor instance %s to %s',
+                batch.pk,
+                previous_instance,
+                batch.executor_instance,
+            )
 
     effected_rows = models.Batch.objects.filter(
         pk=batch_id,
@@ -406,6 +430,7 @@ def start_sync_model(batch_id: int, try_sequence: int):
             sync_jobs,
             on_error.s(batch_id=batch_id, failure_kind=models.Batch.FailureKind.SYSTEM),
             on_sync_done,
+            instance=batch.executor_instance or None,
         )
     except Exception as e:
         on_error.delay(batch_id, models.Batch.FailureKind.SYSTEM, str(e))
@@ -535,17 +560,18 @@ def _upload_datasets_results_to_model(batch: models.Batch, base_key: str):
 
 
 @shared_task
-def start_syncing(jobs: List[SyncJob], on_error, callback):
+def start_syncing(jobs: List[SyncJob], on_error, callback, instance=None):
     # 忽略下载服务，触发手动下载
     download_job = [job for job in jobs if job.user_model][0]
     try:
+        service = executor.get_service(instance)
         for job in jobs:
             if job.sync_id is None:
                 job.sync_id = str(uuid.uuid4())
             src = storage.store.full_uri(job.storage_key).rstrip("/") + "/" # Source with slash ended to copy its content
             dst_path = os.path.join(executor.service.model_root, job.sync_id)
             output = subprocess.check_output(
-                executor.service.online_rsync_to_remote(src, dst_path),
+                service.online_rsync_to_remote(src, dst_path),
             )
             logger.info(f"rsync output: %s", output)
     except subprocess.CalledProcessError as e:
@@ -595,12 +621,15 @@ def run_online(batch_id: int, try_sequence: int, download_job: SyncJob):
     if batch.try_sequence != try_sequence or batch.status == models.Batch.Status.CANCEL:
         return
     eva = Evaluation.objects.get(pk=batch.evaluation_id)
-    environ = _build_environ(batch, eva, download_job)
+    instance = batch.executor_instance or None
     try:
-        sft = SfTaskResult.objects.get(batch_id=ONLINE_JOB_BATCH_ID)
-        if sft.result["status"] != 1:
-            on_error.delay(batch.pk, models.Batch.FailureKind.SYSTEM, "online job error")
-            return
+        service = executor.get_service(instance)
+        if not executor_instance_ready(instance):
+            raise executor.ExecutorInstanceError(
+                f'executor instance {service.instance} is not ready'
+            )
+        environ = _build_environ(batch, eva, download_job)
+
         port = 0
         tee_output = os.path.join(executor.service.job_root, f'env/log.{str(batch.pk)}.txt')
         if eva.domain == Evaluation.Domain.NLP:
@@ -611,7 +640,7 @@ def run_online(batch_id: int, try_sequence: int, download_job: SyncJob):
             environ['FEAM_VENV'] = os.path.join(executor.service.job_root, f'env/venv.{batch.pk}')
             model_path = environ['MODEL_PATH']
             inp = '\n'.join([f'export {key}={val}' for key, val in environ.items()])
-            cmd = executor.service.online_ssh_exe_cmd(
+            cmd = service.online_ssh_exe_cmd(
                 f"bash -x {model_path}/__online__/run.sh {str(batch.pk)} {src} {dst} "
                 f"{executor.service.get_log_path(batch.pk, 'app', batch.try_sequence)} "
                 f"{executor.service.get_log_path(batch.pk, 'eval', batch.try_sequence)} 2>&1 | "
@@ -654,13 +683,16 @@ def run_online(batch_id: int, try_sequence: int, download_job: SyncJob):
             port = online_port(batch)
 
             fenv_dir=f"/share/project/mmenv/{batch.pk}.{batch.try_sequence}"
-            subprocess.run(executor.service.online_ssh_exe_cmd(f"mkdir {fenv_dir}"))
-            cmd = executor.service.online_rsync_to_remote(
+            subprocess.run(
+                service.online_ssh_exe_cmd(f"mkdir -p {fenv_dir}"),
+                check=True,
+            )
+            cmd = service.online_rsync_to_remote(
                 os.path.join(settings.BASE_DIR, "third_party/mm/"),
                 f"{fenv_dir}/__paneval__",
             )
-            subprocess.run(cmd, capture_output=True, text=True)
-            cmd = executor.service.online_ssh_exe_cmd(
+            subprocess.run(cmd, capture_output=True, text=True, check=True)
+            cmd = service.online_ssh_exe_cmd(
                 f"bash -x ~/online_third_party/mm.sh {batch.pk}.{batch.try_sequence} "
                 f"{executor.service.get_log_path(batch.pk, 'app', batch.try_sequence)} "
                 f"\"{executor.service._get_prefix(batch.try_sequence)}\" {port} 2>&1 | "
@@ -676,38 +708,43 @@ def run_online(batch_id: int, try_sequence: int, download_job: SyncJob):
         watch_batch.apply_async(
             args=(batch.pk,),
             countdown=60,
-    )
-    except SfTaskResult.DoesNotExist:
-        traceback.print_exc()
-        on_error.delay(batch.pk, models.Batch.FailureKind.SYSTEM, "online job does not exist")
+        )
+    except (
+        executor.ExecutorInstanceError,
+        executor.ExecutorUnreachable,
+        subprocess.CalledProcessError,
+    ) as exc:
+        on_error.delay(batch.pk, models.Batch.FailureKind.SYSTEM, str(exc))
 
 
 def wait_process(process, port = 0):
     process.wait()
 
 
-def online_status(pid, eva: Evaluation):
-    job = {}
+def online_status(pid, eva: Evaluation, instance=None):
+    service = executor.get_service(instance)
     if eva.domain == Evaluation.Domain.NLP:
-        cmd = executor.service.online_ssh_exe_cmd(f"ps -ef | grep 'run.sh {pid}' | grep -v 'grep'| cat")
+        cmd = service.online_ssh_exe_cmd(f"ps -ef | grep 'run.sh {pid}' | grep -v 'grep'| cat")
     else:
-        cmd = executor.service.online_ssh_exe_cmd(f"ps -ef | grep 'mm.sh {pid}' | grep -v 'grep' | cat")
-    result = subprocess.run(cmd, capture_output = True)
-    res = None
-    if result.returncode == 0:
-        res = result.stdout.decode()
-        if res is None or res == "":
-            job["status"] = "Succeed"
-        else:
-            job["status"] = "Running"
-    else:
-        job["status"] = "Running"
+        cmd = service.online_ssh_exe_cmd(f"ps -ef | grep 'mm.sh {pid}' | grep -v 'grep' | cat")
+    result = subprocess.run(cmd, capture_output=True)
+    stdout = result.stdout or b''
+    res = stdout.decode() if isinstance(stdout, bytes) else stdout
+    if result.returncode != 0:
+        stderr = result.stderr or b''
+        detail = stderr.decode() if isinstance(stderr, bytes) else stderr
+        raise executor.ExecutorUnreachable(
+            f'executor instance {service.instance} is unreachable: {detail.strip()}'
+        )
+
+    job = {"status": "Running" if res else "Succeed"}
     logger.info("= = testdebug, cmd=%s, res=%s, retcode=%d, job=%r", cmd, res, result.returncode, job)
     return job
 
 
 def online_port(batch: models.Batch) -> str:
-    cmd = executor.service.online_ssh_exe_cmd(
+    service = executor.get_service(batch.executor_instance or None)
+    cmd = service.online_ssh_exe_cmd(
         'python -c "import socket;sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM);sock.bind((\'127.0.0.1\', 0));port = sock.getsockname()[1];sock.close();print(port)"',
     )
     result = subprocess.run(cmd, capture_output=True)
@@ -755,7 +792,8 @@ def _build_environ(batch: models.Batch, eva: Evaluation, download_job: SyncJob) 
         'RUNNING_BATCH_ID': str(batch.pk),
         'EVALUATION_MODEL_NAME': eva.online_model_name if eva.online_model_name else eva.name,
         'EVALUATION_MODEL_TYPE': eva.model_type,
-        "EVALUATION_GEN_KWARGS":eva.model_gen_kwargs if eva.model_gen_kwargs else default_gen_kwargs,
+        "EVALUATION_GEN_KWARGS": eva.model_gen_kwargs if eva.model_gen_kwargs else default_gen_kwargs,
+        'FILESYSTEM_OBJECT_STORAGE_PATH': storage.store.get_conf()['base_dir'],
     }
     if eva.tokenizer and 'tokenizer_name' in eva.tokenizer:
         environ['EVALUATION_MODEL_TOKENIZER'] = eva.tokenizer["tokenizer_name"]
@@ -788,12 +826,23 @@ def watch_batch(batch_id: int):
     if is_batch_cancelled(batch):
         return
     try:
-        job = online_status(int(batch.pk), eva)
+        job = online_status(
+            int(batch.pk),
+            eva,
+            batch.executor_instance or None,
+        )
         if not batch.dags_ready:
             _prepare_dags(batch, batch.try_sequence)
 
         results: Optional[Dict[str, Any]] = executor.service.load_batch_status(batch_id, batch.try_sequence)
         logger.info(f'[batch_id={batch_id}] Results: %s', json.dumps(results, indent=2))
+    except (executor.ExecutorUnreachable, executor.ExecutorInstanceError) as e:
+        on_error.delay(
+            batch_id,
+            models.Batch.FailureKind.SYSTEM,
+            str(e),
+        )
+        return
     except Exception as e:
         # on_error.delay(batch_id, models.Batch.FailureKind.SYSTEM, str(e))
         # raise

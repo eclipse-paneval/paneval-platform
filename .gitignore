@@ -7,3 +7,4 @@ benchmark_output/
 celerybeat-schedule
 .docker-compose.env
 playbooks/hosts
+playbooks/group_vars

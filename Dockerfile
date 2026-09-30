@@ -11,7 +11,6 @@ ADD deployments/start.sh /start.sh
 ADD . /paneval
 
 WORKDIR /paneval
-RUN mkdir /root/.ssh && ssh-keyscan gitee.com >> /root/.ssh/known_hosts
 
 RUN poetry --version && \
     poetry config virtualenvs.options.always-copy true && \

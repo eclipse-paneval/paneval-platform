@@ -3,8 +3,9 @@ work_dir=`dirname $0`
 work_dir=`cd $work_dir;pwd`
 cd $work_dir
 
-mkdir -p ~/.cache/evalmm
-ln -s $DATASETS_DATASET_DOWNLOAD_PATH  ~/.cache/evalmm/datasets
+mkdir -p ~/.cache/evalmm/
+mkdir -p /share/project/evalmm-cache
+ln -fns /share/project/evalmm-cache  ~/.cache/evalmm/datasets
 
 apt-get update
 apt-get install -y psmisc

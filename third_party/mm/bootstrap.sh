@@ -10,13 +10,8 @@ if [ "x$port" == "x" ];then
     port=5000
 fi
 
-if [ -d "$work_dir/paneval" ]; then
-    echo "this is online"
-else
-    CODE_TAR_GZ=$(find $CONDA_DATASET_DOWNLOAD_PATH -name 'paneval.tar.gz')
-    mkdir ./paneval
-    tar -zxf $CODE_TAR_GZ -C ./paneval
-fi
+bash -e "$work_dir/prepare_tasks.sh"
+
 if [ -d "/root/miniconda3" ]; then
     echo "Directory exists"
 else
@@ -57,7 +52,6 @@ pythonm=/root/miniconda3/bin/python
 export PYTHONPATH="./:$work_dir/paneval:$PYTHONPATH"
 # export EVALMM_API_KEY="TODO"
 # export EVALMM_BASE_URL="TODO"
-export HF_ENDPOINT='https://hf-mirror.com'
 export HF_HOME='/share/project/huggingface-240306'
 
 if [ -d "~/.cache/torch/hub/checkpoints" ]; then
@@ -67,14 +61,17 @@ if [ -d "/root/.cache/evalmm/datasets" ]; then
     echo "new Directory exists"
 else
     mkdir -p ~/.cache/evalmm
-    ln -s $DATASETS_DATASET_DOWNLOAD_PATH  ~/.cache/evalmm/datasets
+    mkdir -p /share/project/evalmm-cache
+    ln -fns /share/project/evalmm-cache  ~/.cache/evalmm/datasets
 fi
 
+batch_id=`$pythonm helper.py batchid 2>>$log_path` # This is used to initial status state file.
 tryrun=`$pythonm helper.py tryrun 2>>$log_path`
 tasks=`$pythonm helper.py tasks 2>>$log_path`
 adapter=`$pythonm helper.py adapter 2>>$log_path`
 HF_PRETRAINED=`$pythonm helper.py nlp-pretrained 2>>$log_path | cat`
 online=`$pythonm helper.py online 2>>$log_path`
+online_model_name=`$pythonm helper.py onlinemodelname 2>>$log_path`
 out_dir=$work_dir/outputs
 mkdir $out_dir
 
@@ -149,19 +146,18 @@ run() {
     if [ -z "$tasks" ]; then
         echo "tasks is empty"
     else
-        cd paneval
+        pushd paneval
         $pythonm evalmm/server/run_server.py --port $port --tasks $tasks --checkpoint="$adapter" --output-dir $out_dir $tryrun &>$log_path &
         pid=$!
-        sleep 30
-        cd ..
-        cd ..
-        pwd
+        popd
+        $pythonm helper.py portused $port
+        cp -av paneval/model_zoo/vlm/api_model/* temp/
+        cp ../meta.json temp/
+        pushd temp
         echo "begin run client run.sh..." >>$log_path
-        bash -x run.sh http://127.0.0.1 $port &
-        #nohup bash -x run.sh http://127.0.0.1 5000 &>>$log_path &
+        bash -x temp.sh http://127.0.0.1 $port $online_model_name &
         pid1=$!
-
-        cd -
+        popd
         $pythonm helper.py output $out_dir $pid1 $port $log_path | cat
 
         kill -9 $pid | cat

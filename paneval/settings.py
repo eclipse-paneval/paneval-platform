@@ -246,10 +246,6 @@ STORAGE_DATASETS = {
             'STORAGE_KEY': 'mnt/evalmm/conda/20260624',
             'DOWNLOAD_ID': 'a33068a6-5c1e-4083-97a8-7313d1ba5d29',
         },
-        'datasets': {
-            'STORAGE_KEY': 'mnt/evalmm/datasets/20260624',
-            'DOWNLOAD_ID': 'edcdc508-165f-49ea-8e12-35546b6def0f',
-        },
     }
 }
 
@@ -295,6 +291,12 @@ SSH_EXECUTOR = {
         'online_ssh_port': 3022,
     },
 }
+
+PANEVAL_SSH_EXECUTOR_INSTANCES = [
+    instance.strip()
+    for instance in os.environ.get('PANEVAL_SSH_EXECUTOR_INSTANCES', '').split(',')
+    if instance.strip()
+] or [SSH_EXECUTOR['conf']['online_ssh_host']]
 
 # 分块上传的大小
 CHUNK_SIZE_KB = 10 * 1024  # 10M

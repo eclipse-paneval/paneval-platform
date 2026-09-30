@@ -323,6 +323,18 @@ def online():
     else:
         print("0")
 
+
+@cli.command()
+def onlinemodelname():
+    fp = open("config.json", "r")
+    a = json.loads(fp.read())
+    fp.close()
+    if "model_name" in a:
+        print(a["model_name"])
+    else:
+        print("")
+
+
 @cli.command()
 def tryrun():
     fp = open("config.json", "r")
@@ -483,6 +495,25 @@ def output(outputs, pid, port, log_path):
             write_result(path, data)
             break
         time.sleep(60)
+
+@cli.command()
+@click.argument("port", required=True)
+def portused(port):
+    import socket
+    host = "localhost"
+    port = int(port)
+    result = 1
+    while result != 0:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(1)
+                result = s.connect_ex((host, port))
+                if result == 0:
+                    break
+        except Exception as e:
+            print(f"检查端口时发生错误: {e}", file=sys.stderr)
+        print(f"port {port} is not on used", result)
+        time.sleep(3)
 
 if __name__ == '__main__':
     cli()
